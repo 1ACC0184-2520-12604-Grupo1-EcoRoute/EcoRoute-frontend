@@ -1,29 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FindOptimalRoute } from "../../application/FindOptimalRoute";
 import { RouteApiRepository } from "../../infrastructure/api/RouteApiRepository";
 import "./TradeDashboard.css";
 
 export const TradeDashboard: React.FC = () => {
-  const [origin, setOrigin] = useState("Germany");
-  const [destination, setDestination] = useState("Brazil");
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
   const [product, setProduct] = useState("Paneles solares");
-  const [result, setResult] = useState<{ path: string; cost: number } | null>(null);
+  const [result, setResult] = useState<{ path: string[]; cost: number } | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
+  const [nodes, setNodes] = useState<string[]>([]);
 
   const repo = new RouteApiRepository();
 
-  // Lista fija de países (puedes reemplazar con datos del backend después)
-  const countries = ["Germany", "Portugal", "Netherlands", "Brazil"];
+  // 🚀 Cargar nodos desde backend al montar el componente
+  useEffect(() => {
+    fetch("/api/nodes")
+      .then((res) => res.json())
+      .then((data) => setNodes(data.nodes))
+      .catch(() => console.error("No se pudieron cargar los nodos"));
+  }, []);
 
   const handleCompute = async () => {
     setLoading(true);
     try {
       const usecase = new FindOptimalRoute(repo);
-      const route = await usecase.execute(origin, destination); // devuelve Route
-
-      // RouteApiRepository construye un objeto Route con origin, destination y cost
+      const route = await usecase.execute(origin, destination);
       setResult({
-        path: `${route.origin} → ${route.destination}`,
+        path: route.path,
         cost: route.cost,
       });
     } catch (err: any) {
@@ -60,27 +66,22 @@ export const TradeDashboard: React.FC = () => {
             <div>
               <label>Origen</label>
               <br />
-              <select value={origin} onChange={(e) => setOrigin(e.target.value)}>
-                {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <input
+                list="nodes"
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                placeholder="Escribe o selecciona origen"
+              />
             </div>
             <div>
               <label>Destino</label>
               <br />
-              <select
+              <input
+                list="nodes"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-              >
-                {countries.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                placeholder="Escribe o selecciona destino"
+              />
             </div>
             <div>
               <label>Producto</label>
@@ -97,10 +98,17 @@ export const TradeDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* datalist para sugerencias */}
+          <datalist id="nodes">
+            {nodes.map((n) => (
+              <option key={n} value={n} />
+            ))}
+          </datalist>
+
           {result && (
             <div style={{ marginTop: "1rem" }}>
               <h3>Ruta encontrada</h3>
-              <p>{result.path}</p>
+              <p>{result.path.join(" → ")}</p>
               <p>
                 <strong>Costo total (estimado):</strong> {result.cost}
               </p>

@@ -8,13 +8,12 @@ export class FindOptimalRoute {
    * Ejecuta el caso de uso para encontrar la ruta óptima
    * @param origin país de origen
    * @param destination país de destino
-   * @returns objeto Route con origen, destino y costo total
+   * @returns objeto Route con origen, destino, path completo y costo total
    */
   async execute(origin: string, destination: string): Promise<Route> {
-    // Llama al repositorio (que en este caso consulta el backend FastAPI)
     const route = await this.routeRepo.findOptimalRoute(origin, destination);
 
-    if (!route || !route.cost) {
+    if (!route || !route.path || route.path.length === 0 || !route.cost) {
       throw new Error("No se pudo calcular la ruta óptima");
     }
 
