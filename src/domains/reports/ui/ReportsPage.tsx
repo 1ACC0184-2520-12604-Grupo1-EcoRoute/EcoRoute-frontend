@@ -1,52 +1,80 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import "./ReportsPage.css";
 
+type Report = {
+  id: number;
+  created_at: string; // ISO
+  origin: string;
+  destination: string;
+  product?: string | null;
+  cost: number;
+  path: string[];
+};
+
+const currency = (n: number) =>
+    new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN", maximumFractionDigits: 0 }).format(n);
+
 export const ReportsPage: React.FC = () => {
-  const navigate = useNavigate();
+  const [items, setItems] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
 
-  const goBack = () => {
-    navigate("/");
-  };
-
-  // Ejemplo de datos de reportes
-  const reports = [
-    { id: 1, title: "Reporte de Ventas", date: "2025-09-01", status: "Completado" },
-    { id: 2, title: "Análisis de Mercado", date: "2025-09-10", status: "Pendiente" },
-    { id: 3, title: "Proyección Financiera", date: "2025-09-15", status: "Completado" },
-  ];
+  useEffect(() => {
+    (async () => {
+      setErr("");
+      setLoading(true);
+      try {
+        const res = await fetch("/api/reports");
+        if (!res.ok) throw new Error("No se pudieron cargar los reportes");
+        const data: Report[] = await res.json();
+        setItems(data || []);
+      } catch (e: any) {
+        setErr(e?.message || "Error inesperado");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   return (
-    <div className="reports-container">
-      <header className="reports-header">
-        <h1>Reports</h1>
-        <button onClick={goBack}>⬅ Volver al Dashboard</button>
-      </header>
+      <div className="reports">
+        <h1>Reportes</h1>
 
-      <main className="reports-main">
-        <table className="reports-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Título</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reports.map((report) => (
-              <tr key={report.id}>
-                <td>{report.id}</td>
-                <td>{report.title}</td>
-                <td>{report.date}</td>
-                <td className={report.status === "Completado" ? "status-done" : "status-pending"}>
-                  {report.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </main>
-    </div>
+        {loading && <p className="muted">Cargando...</p>}
+        {!!err && <p className="error">{err}</p>}
+
+        {!loading && items.length === 0 && <p className="muted">Aún no hay reportes. Calcula una ruta para registrarla.</p>}
+
+        {items.length > 0 && (
+            <div className="table-wrap">
+              <table className="rtable">
+                <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Origen</th>
+                  <th>Destino</th>
+                  <th>Producto</th>
+                  <th>Ruta</th>
+                  <th>Costo</th>
+                </tr>
+                </thead>
+                <tbody>
+                {items.map((r) => (
+                    <tr key={r.id}>
+                      <td>{new Date(r.created_at).toLocaleString("es-PE")}</td>
+                      <td>{r.origin}</td>
+                      <td>{r.destination}</td>
+                      <td>{r.product ?? "—"}</td>
+                      <td>{r.path.join(" → ")}</td>
+                      <td>{currency(r.cost)}</td>
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+            </div>
+        )}
+      </div>
   );
 };
+
+export default ReportsPage;

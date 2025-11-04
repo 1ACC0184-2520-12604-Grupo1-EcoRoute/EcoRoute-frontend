@@ -1,44 +1,56 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { TradeDashboard } from "@domains/trade/ui/pages/TradeDashboard";
-import { LoginPage } from "@domains/auth/ui/LoginPage";
-import { RegisterPage } from "@domains/auth/ui/RegisterPage";
+import { DashboardPage } from "../../pages/DashboardPage";
+import { LoginPage } from "../../pages/LoginPage";
+import { RegisterPage } from "../../pages/RegisterPage";
 import { ReportsPage } from "@domains/reports/ui/ReportsPage";
 import { JSX } from "react";
+import { Sidebar } from "../../components/Sidebar";
 
-// Ruta protegida: revisa si existe token en localStorage
+// Layout con Sidebar visible en todas las vistas internas
+const AppLayout = ({ children }: { children: JSX.Element }) => {
+    return (
+        <div className="app-layout">
+            <Sidebar />
+            <main className="app-content">{children}</main>
+        </div>
+    );
+};
+
+// Ruta protegida: revisa si existe sesión activa
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
+    const isLoggedIn = sessionStorage.getItem("loggedIn") === "true";
+    return isLoggedIn ? children : <Navigate to="/login" replace />;
 };
 
 export const AppRoutes: React.FC = () => (
-  <Routes>
-    {/* Rutas públicas */}
-    <Route path="/login" element={<LoginPage />} />
-    <Route path="/register" element={<RegisterPage />} />
+    <Routes>
+        {/* Rutas públicas */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-    {/* Rutas protegidas (solo accesibles si hay token) */}
-    <Route
-      path="/"
-      element={
-        <ProtectedRoute>
-          <TradeDashboard />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/reports"
-      element={
-        <ProtectedRoute>
-          <ReportsPage />
-        </ProtectedRoute>
-      }
-    />
+        {/* Rutas internas con Sidebar */}
+        <Route
+            path="/"
+            element={
+                <ProtectedRoute>
+                    <AppLayout>
+                        <DashboardPage />
+                    </AppLayout>
+                </ProtectedRoute>
+            }
+        />
+        <Route
+            path="/reports"
+            element={
+                <ProtectedRoute>
+                    <AppLayout>
+                        <ReportsPage />
+                    </AppLayout>
+                </ProtectedRoute>
+            }
+        />
 
-    {/* Si el usuario entra a una ruta desconocida → login */}
-    <Route path="*" element={<Navigate to="/login" replace />} />
-  </Routes>
+        {/* Ruta desconocida → login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
 );

@@ -1,0 +1,23 @@
+/* GRID BASE: Sidebar (240px) | Contenido (resto) */
+.app-layout{
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+    background: #0b1220;
+}
+
+/* Columna de contenido (donde viven header + main) */
+.app-content{
+    min-width: 0;              /* evita overflow horizontal */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Responsive: si ocultas/colapsas el sidebar en móvil,
+   esta regla expande el contenido a 100% */
+@media (max-width: 768px){
+    .app-layout{
+        grid-template-columns: 0 1fr; /* sidebar colapsado */
+    }
+}
