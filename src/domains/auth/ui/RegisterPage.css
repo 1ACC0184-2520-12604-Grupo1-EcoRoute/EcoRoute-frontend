@@ -1,78 +1,214 @@
-.register-container {
-  max-width: 400px;
-  margin: 5rem auto;
-  padding: 2rem;
+/* ==== Sin barras globales (igual que login) ==== */
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden; }
+
+/* ====== Tokens compartidos (coherentes con login) ====== */
+:root{
+  --bg: radial-gradient(1200px 600px at 80% 0%, #1e293b 0%, rgba(2,6,23,0) 60%),
+  radial-gradient(900px 500px at 10% 100%, #0f172a 0%, rgba(2,6,23,0) 65%),
+  linear-gradient(180deg, #0b1220, #0a0f1f);
+  --card-bg: rgba(12, 16, 28, .62);
+  --card-border: rgba(148,163,184,.25);
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --brand-1: #60a5fa; /* azul rutas */
+  --brand-2: #34d399; /* verde energía */
+  --ring: #7dd3fc;
+  --radius: 16px;
+  --radius-sm: 14px;
+  --shadow-1: 0 10px 30px rgba(2, 6, 23, .25);
+  --shadow-2: 0 6px 16px rgba(2, 6, 23, .18);
+  --field-bg: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+}
+
+/* ====== Layout base (coherente con login) ====== */
+.register-page{
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  padding: 24px 16px;
+  position: relative;
+  overflow: hidden;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+}
+
+/* Fondo de cuadrícula (igual que login) */
+.bg-grid{
+  position: fixed; inset: 0; pointer-events: none;
+  background-image:
+          linear-gradient(to right, rgba(99,102,241,.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(99,102,241,.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(70% 50% at 50% 40%, black 55%, transparent 100%);
+}
+
+/* ====== Tarjeta glass ====== */
+.card{
+  width: clamp(320px, 90vw, 480px);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-1), var(--shadow-2);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  padding: 24px;
+  animation: card-in .35s ease;
+}
+@keyframes card-in { from { opacity: 0; transform: translateY(6px) scale(.996); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* ====== Header ====== */
+.brand{ display:flex; align-items:center; gap:12px; margin-bottom: 10px; }
+.brand__logo{
+  width:42px; height:42px; display:grid; place-items:center;
   border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, rgba(34,197,94,.2), rgba(37,99,235,.2));
+  border: 1px solid rgba(148,163,184,.35);
+  box-shadow: 0 8px 20px rgba(2,6,23,.05) inset;
+}
+.title{ font-size: 1.5rem; margin:0; letter-spacing:.2px; }
+.subtitle{ margin:.1rem 0 0; color: var(--muted); font-size:.92rem; }
+
+/* ====== Formulario ====== */
+.form{ display:grid; gap: 16px; margin-top: 8px; }
+
+/* Campo con icono + estilo filled */
+.field{ position: relative; display: grid; }
+.field__icon{
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; display:grid; place-items:center;
+  color: #b0bdd1; z-index: 2;
+}
+.field__icon::before{
+  content:""; position:absolute; inset:0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 1px rgba(148,163,184,.12);
 }
 
-.register-container h1 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: #2c3e50;
-}
-
-.register-form {
-  display: flex;
-  flex-direction: column;
-}
-
-.register-form label {
-  margin-bottom: 0.3rem;
-  font-weight: bold;
-  color: #34495e;
-}
-
-.register-form input {
-  padding: 0.6rem;
-  margin-bottom: 1rem;
-  border: 1px solid #bdc3c7;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.register-form input:focus {
-  border-color: #2980b9;
-  outline: none;
-}
-
-.register-form button {
-  background-color: #27ae60;
-  color: white;
-  padding: 0.7rem;
-  border: none;
-  border-radius: 8px;
+/* Input + label flotante */
+.field input{
+  width: 100%;
+  height: 48px;
+  padding: 0 44px 0 52px; /* icono + posible toggle */
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148,163,184,.28);
+  background: var(--field-bg);
+  color: var(--text);
   font-size: 15px;
-  font-weight: bold;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+  box-shadow:
+          inset 0 1px 0 rgba(255,255,255,.06),
+          0 0 0 0 rgba(125,211,252,0);
+}
+.field input::placeholder{ color: transparent; }
+
+.field label{
+  position: absolute; left: 52px; top: 14px;
+  color: var(--muted); font-size: 14px;
+  transform-origin: left top;
+  transition: transform .15s ease, color .2s ease, top .15s ease, left .15s ease, background .15s ease;
+  padding: 0 6px; pointer-events: none;
+  background: transparent;
+}
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label{
+  top: -8px; left: 44px;
+  transform: scale(.86);
+  color: var(--ring);
+  background: linear-gradient(180deg, transparent 45%, var(--card-bg) 45%);
+}
+
+/* Ring accesible + foco */
+.field__ring{
+  position: absolute; inset: -2px;
+  border-radius: calc(var(--radius-sm) + 2px);
+  box-shadow: 0 0 0 0 rgba(125,211,252,0);
+  transition: box-shadow .2s ease;
+  pointer-events: none;
+}
+.field:focus-within .field__ring{
+  box-shadow: 0 0 0 3px rgba(125,211,252,.32);
+}
+.field input:focus{
+  border-color: rgba(125,211,252,.75);
+  box-shadow:
+          inset 0 1px 0 rgba(255,255,255,.08),
+          0 0 0 3px rgba(125,211,252,.18);
+}
+
+/* Toggle password (si lo usas en registrar) */
+.toggle-pwd{
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  border: none; background: transparent; color: #9aa8bd;
+  width: 36px; height: 36px; border-radius: 10px;
+  display: grid; place-items: center; cursor: pointer;
+  transition: background .2s, color .2s;
+  z-index: 2;
+}
+.toggle-pwd:hover{ background: rgba(148,163,184,.14); color: var(--text); }
+
+/* hint */
+.hint{ margin-top: 6px; color: var(--muted); font-size: 12.5px; }
+
+/* Botón principal */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:8px; width:100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(37, 99, 235, .32);
+  background: linear-gradient(135deg, var(--brand-1), var(--brand-2));
+  color: white; font-weight: 700; letter-spacing:.2px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease, filter .2s ease;
+  box-shadow: 0 10px 20px rgba(37,99,235,.22);
+  margin-top: 4px;
 }
+.btn:hover{ box-shadow: 0 14px 26px rgba(37,99,235,.32); filter: saturate(1.05); }
+.btn:active{ transform: translateY(1px) scale(.998); }
+.btn:disabled{ opacity:.75; cursor:not-allowed; }
 
-.register-form button:hover {
-  background-color: #1e874b;
+/* Spinner */
+.spinner{
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.5);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.register-message {
-  margin-top: 1rem;
-  text-align: center;
-  font-size: 14px;
+/* Alertas (coherentes con login) */
+.alert{
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(148,163,184,.35);
+  color: var(--muted); font-size:14px;
+  margin-bottom:12px;
 }
-
-.register-login-link {
-  margin-top: 1rem;
-  text-align: center;
-  font-size: 14px;
-  color: #34495e;
+.alert--success{ border-color: rgba(16,185,129,.45); color:#bbf7d0; background: rgba(16,185,129,.08); }
+.alert--error{ border-color: rgba(239,68,68,.45); color:#fecaca; background: rgba(239,68,68,.08); }
+.alert__icon{ font-weight:700; margin-top:1px; }
+.alert__text{ flex:1; }
+.alert__close{
+  border:none; background:transparent; font-size:18px; line-height:1;
+  color: inherit; cursor:pointer; padding:2px 6px; border-radius:8px;
 }
+.alert__close:hover{ background: rgba(255,255,255,.08); }
 
-.register-login-link a {
-  color: #2980b9;
-  font-weight: bold;
-  text-decoration: none;
+/* Enlace a login */
+.login-link{
+  text-align:center; color: var(--muted); font-size: 14px; margin-top: 12px;
 }
+.login-link a{ color: var(--brand-1); font-weight: 700; text-decoration: none; }
+.login-link a:hover{ text-decoration: underline; }
 
-.register-login-link a:hover {
-  text-decoration: underline;
+/* ====== Responsive: pantallas muy bajas ====== */
+@media (max-height: 650px){
+  .register-page{ overflow-y: auto; }
+  .card{ margin: 16px 0; padding: 20px; }
 }
