@@ -2,7 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { DashboardPage } from "../../pages/DashboardPage";
 import { LoginPage } from "../../pages/LoginPage";
 import { RegisterPage } from "../../pages/RegisterPage";
-import { ReportsPage } from "@domains/reports/ui/ReportsPage";
+import ReportsPage from "../../pages/ReportsPage";
+
 import { JSX } from "react";
 import { Sidebar } from "../../components/Sidebar";
 

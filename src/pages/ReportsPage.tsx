@@ -1,29 +1,33 @@
+// src/domains/reports/ui/ReportsPage.tsx
 import { useMemo, useState } from "react";
 import "./TradeDashboard.css";
 
 const API = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
-export default function ReportsPage(){
-    const token = useMemo(()=> localStorage.getItem("token") ?? "", []);
+export default function ReportsPage() {
+    const token = useMemo(() => localStorage.getItem("token") ?? "", []);
     const [msg, setMsg] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     const download = async (path: string, filename: string) => {
-        setLoading(true); setMsg(null);
-        try{
+        setLoading(true);
+        setMsg(null);
+        try {
             const res = await fetch(`${API}${path}`, {
-                headers: { "Authorization": token ? `Bearer ${token}` : "" }
+                headers: { Authorization: token ? `Bearer ${token}` : "" },
             });
-            if(!res.ok) throw new Error("No se pudo generar el reporte");
+            if (!res.ok) throw new Error("No se pudo generar el reporte");
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            a.href = url; a.download = filename; a.click();
+            a.href = url;
+            a.download = filename;
+            a.click();
             URL.revokeObjectURL(url);
             setMsg("Reporte descargado correctamente.");
-        }catch(e:any){
+        } catch (e: any) {
             setMsg(`Error: ${e.message}`);
-        }finally{
+        } finally {
             setLoading(false);
         }
     };
@@ -41,7 +45,7 @@ export default function ReportsPage(){
                     <div className="grid">
                         <button
                             className="btn"
-                            onClick={()=> download("/api/v1/report/daily-csv", "ecoroute_daily.csv")}
+                            onClick={() => download("/api/v1/report/daily-csv", "ecoroute_daily.csv")}
                             disabled={loading}
                         >
                             {loading ? <span className="loader" /> : "CSV diario (dataset procesado)"}
@@ -49,7 +53,7 @@ export default function ReportsPage(){
 
                         <button
                             className="btn btn--ghost"
-                            onClick={()=> download("/api/v1/report/summary-pdf", "ecoroute_summary.pdf")}
+                            onClick={() => download("/api/v1/report/summary-pdf", "ecoroute_summary.pdf")}
                             disabled={loading}
                         >
                             {loading ? <span className="loader" /> : "Resumen PDF (métricas clave)"}

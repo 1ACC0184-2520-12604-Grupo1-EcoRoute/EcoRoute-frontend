@@ -109,3 +109,60 @@
 @media (max-width: 600px) {
   .controls-grid { grid-template-columns: 1fr; }
 }
+/* ===== Reports list ===== */
+.reports-state{
+  padding: 16px;
+  color: #cbd5e1; /* slate-300 */
+}
+.reports-state.error{ color:#fca5a5; }
+.reports-state.empty{ color:#94a3b8; }
+
+.table-wrap{
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.18);
+  background: rgba(2,6,23,.35);
+}
+
+.reports-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.reports-table thead th{
+  text-align: left;
+  font-weight: 600;
+  color: #cbd5e1;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(148,163,184,.18);
+  background: rgba(15,23,42,.55);
+}
+.reports-table tbody td{
+  padding: 12px 14px;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(148,163,184,.12);
+}
+.reports-table tbody tr:hover td{
+  background: rgba(51,65,85,.20);
+}
+.reports-table td.muted{ color:#94a3b8; }
+
+.btn.btn--tiny{
+  margin-left: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+/* badges por algoritmo */
+.badge{
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  border: 1px solid rgba(148,163,184,.22);
+}
+.badge.dijkstra{ background: rgba(59,130,246,.12); color:#60a5fa; }
+.badge.bellman-ford{ background: rgba(234,179,8,.12); color:#eab308; }
+.badge.default{ background: rgba(148,163,184,.12); color:#cbd5e1; }
