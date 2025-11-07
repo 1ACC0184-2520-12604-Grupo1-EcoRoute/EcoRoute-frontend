@@ -1,75 +1,343 @@
-.dashboard-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f4f6f9;
-  font-family: Arial, sans-serif;
+/* ==============================
+   RESET BÁSICO PARA SCROLL
+============================== */
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    /* permite scroll vertical global si el contenido crece */
+    overflow-y: auto;
+    background: #020617;
 }
 
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #2c3e50;
-  color: white;
-  padding: 1rem 2rem;
+/* ==============================
+   GLOBAL
+============================== */
+.trade-dashboard-root {
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #111827, #020617);
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    /* IMPORTANTE: habilita scroll interno si hiciera falta */
+    overflow-y: auto;
 }
 
-.dashboard-header h1 {
-  margin: 0;
+/* ==============================
+   HEADER
+============================== */
+.td-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.dashboard-nav button {
-  margin-left: 1rem;
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  background: #3498db;
-  color: white;
-  transition: background 0.3s;
+.td-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-.dashboard-nav button:hover {
-  background: #2980b9;
+.td-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3b82f6, #22c55e);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
 }
 
-.logout-btn {
-  background: #e74c3c;
+.td-logo-dot {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
 }
 
-.logout-btn:hover {
-  background: #c0392b;
+.td-header-text h1 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+    color: #fff;
 }
 
-.dashboard-main {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  padding: 2rem;
+.td-header-text p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #9ca3af;
 }
 
-.dashboard-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+/* === Botones de algoritmos === */
+.td-header-buttons {
+    display: flex;
+    gap: 0.8rem;
 }
 
-.dashboard-card h2 {
-  margin-top: 0;
-  color: #2c3e50;
+.td-header-buttons button {
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    color: white;
+    font-size: 0.9rem;
+    transition: all 0.25s ease;
 }
 
-.dashboard-card p,
-.dashboard-card ul {
-  color: #34495e;
-  font-size: 14px;
+/* Colores por algoritmo */
+.td-header-buttons button:nth-child(1) {
+    background: #2563eb; /* Azul - Dijkstra */
+}
+.td-header-buttons button:nth-child(1):hover {
+    background: #1d4ed8;
 }
 
-.dashboard-card ul {
-  padding-left: 1.2rem;
+.td-header-buttons button:nth-child(2) {
+    background: #16a34a; /* Verde - Kruskal */
+}
+.td-header-buttons button:nth-child(2):hover {
+    background: #15803d;
+}
+
+.td-header-buttons button:nth-child(3) {
+    background: #f59e0b; /* Amarillo - TSP */
+    color: #111;
+    font-weight: 600;
+}
+.td-header-buttons button:nth-child(3):hover {
+    background: #d97706;
+    color: white;
+}
+
+/* ==============================
+   TARJETAS Y CONTENEDORES
+============================== */
+.td-card {
+    background: rgba(31, 41, 55, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    margin: 1.5rem auto;
+    padding: 1.5rem 2rem;
+    width: 90%;
+    max-width: 1100px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.td-card h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 1rem;
+}
+
+/* ==============================
+   FILTROS
+============================== */
+.td-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.td-field label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+}
+
+.td-field select {
+    width: 100%;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: none;
+    background: #1f2937;
+    color: white;
+    outline: none;
+    font-size: 0.9rem;
+    transition: box-shadow 0.2s;
+}
+
+.td-field select:focus {
+    box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.td-primary-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.td-primary-btn:hover {
+    background: #2563eb;
+}
+
+/* ==============================
+   MENSAJES
+============================== */
+.td-msg {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #cbd5e1;
+}
+
+.td-msg-error {
+    color: #ef4444;
+}
+
+.td-msg-ok {
+    background: rgba(16, 185, 129, 0.15);
+    border-left: 4px solid #10b981;
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #d1fae5;
+}
+
+/* ==============================
+   MAPA
+============================== */
+.td-map-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.td-map {
+    height: 70vh;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+}
+
+/* ==============================
+   RESPONSIVE
+============================== */
+@media (max-width: 768px) {
+    .td-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+
+    .td-header-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .td-card {
+        width: 94%;
+        padding: 1.2rem 1rem;
+    }
+
+    .td-filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .td-map {
+        height: 60vh;
+    }
+}
+
+/* ==============================
+   TOOLTIP MAPA
+============================== */
+.leaflet-tooltip {
+    background: rgba(15, 23, 42, 0.96);
+    color: #e5e7eb;
+    border-radius: 6px;
+    border: 1px solid rgba(148, 163, 253, 0.35);
+    font-size: 0.75rem;
+    padding: 3px 6px;
+}
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #111827, #020617);
+}
+
+/* El main se corre a la derecha del sidebar */
+.app-main {
+    margin-left: 220px;
+    flex: 1;
+    padding-top: 0.5rem;
+}
+
+/* Login básico */
+.login-root {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top, #111827, #020617);
+}
+
+.login-card {
+    background: rgba(15, 23, 42, 0.98);
+    padding: 2rem;
+    border-radius: 16px;
+    width: 320px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    color: #e5e7eb;
+}
+
+.login-card h2 {
+    margin: 0 0 0.5rem;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: none;
+    background: #111827;
+    color: #f9fafb;
+    outline: none;
+    margin-top: 0.25rem;
+}
+
+.login-card button {
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.7rem;
+    border-radius: 8px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login-card button:hover {
+    background: #2563eb;
+}
+
+@media (max-width: 768px) {
+    .app-main {
+        margin-left: 0;
+        margin-top: 64px; /* altura aprox del sidebar convertido en topbar */
+        padding: 0.5rem;
+    }
 }
