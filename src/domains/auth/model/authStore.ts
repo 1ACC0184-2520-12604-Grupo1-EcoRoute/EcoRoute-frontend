@@ -54,3 +54,9 @@ export function getAuthHeaders(): HeadersInit {
             "Content-Type": "application/json",
         };
 }
+export function isLoggedIn(): boolean {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const username = localStorage.getItem(USERNAME_KEY);
+
+    return !!token && !!username;
+}
