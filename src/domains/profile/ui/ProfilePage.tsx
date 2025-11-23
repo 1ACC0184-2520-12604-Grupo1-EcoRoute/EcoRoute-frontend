@@ -24,7 +24,7 @@ export const ProfilePage: React.FC = () => {
 
         const fetchMe = async () => {
             try {
-                const res = await fetch("http://127.0.0.1:8000/me", {
+                const res = await fetch("https://ecoroute-backend-production.up.railway.app/me", {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

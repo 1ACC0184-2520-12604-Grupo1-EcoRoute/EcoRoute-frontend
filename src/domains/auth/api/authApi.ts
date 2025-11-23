@@ -1,5 +1,5 @@
 const API_BASE =
-    (import.meta as any).env?.VITE_API_BASE || "http://127.0.0.1:8000";
+    (import.meta as any).env?.VITE_API_BASE || "https://ecoroute-backend-production.up.railway.app";
 
 export async function loginRequest(username: string, password: string) {
     const res = await fetch(`${API_BASE}/login`, {

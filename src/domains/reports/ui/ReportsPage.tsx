@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getSession } from "../../auth/model/authStore";
 import "./ReportsPage.css";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://ecoroute-backend-production.up.railway.app";
 
 type Report = {
     id: number;
