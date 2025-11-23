@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { getSession } from "../../auth/model/authStore";
 import "./ReportsPage.css";
 
-const API_BASE = "https://ecoroute-backend-production.up.railway.app";
+const API_BASE =
+    (import.meta as any).env?.VITE_API_BASE || "https://ecoroute-backend-production.up.railway.app";
 
 type Report = {
     id: number;

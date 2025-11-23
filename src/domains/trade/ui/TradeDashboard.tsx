@@ -12,7 +12,8 @@ import "leaflet/dist/leaflet.css";
 import "./TradeDashboard.css";
 import { getSession } from "../../auth/model/authStore";
 
-const API_BASE = "https://ecoroute-backend-production.up.railway.app";
+const API_BASE =
+    (import.meta as any).env?.VITE_API_BASE || "https://ecoroute-backend-production.up.railway.app";
 
 type TradeFlow = {
     origin: string;

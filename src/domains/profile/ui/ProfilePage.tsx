@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { getSession, clearSession } from "../../auth/model/authStore";
 import "./ProfilePage.css";
 
+const API_BASE =
+    (import.meta as any).env?.VITE_API_BASE || "https://ecoroute-backend-production.up.railway.app";
+
 type User = {
     id: number;
     username: string;
@@ -24,7 +27,7 @@ export const ProfilePage: React.FC = () => {
 
         const fetchMe = async () => {
             try {
-                const res = await fetch("https://ecoroute-backend-production.up.railway.app/me", {
+                const res = await fetch(`${API_BASE}/me`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
