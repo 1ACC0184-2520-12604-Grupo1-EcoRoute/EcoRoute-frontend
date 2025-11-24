@@ -19,11 +19,14 @@ export const LoginPage: React.FC = () => {
 
         try {
             const data = await loginRequest(username, password);
+            // Guardamos token y usuario
             saveSession(data.access_token, username);
+            
             setMessage("✅ Inicio de sesión exitoso. Redirigiendo...");
+            // Esperamos un poco para que el usuario lea el mensaje
             setTimeout(() => navigate("/", { replace: true }), 700);
         } catch (err: any) {
-            setMessage("❌ " + err.message);
+            setMessage("❌ " + (err.message || "Error al iniciar sesión"));
         } finally {
             setLoading(false);
         }
@@ -82,6 +85,18 @@ export const LoginPage: React.FC = () => {
                             type="button"
                             className="toggle-pwd"
                             onClick={() => setShowPwd(!showPwd)}
+                            title={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
+                            style={{
+                                position: "absolute",
+                                right: "10px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                fontSize: "1.2rem",
+                                zIndex: 10
+                            }}
                         >
                             {showPwd ? "🙈" : "👁️"}
                         </button>
@@ -108,13 +123,14 @@ export const LoginPage: React.FC = () => {
                     </div>
 
                     <div className="alt-actions">
-                        <button type="button" className="alt-btn" onClick={handleGoogleLogin}>
-                            ↪ Google
+                        <button type="button" className="btn btn-google" onClick={handleGoogleLogin}>
+                            <span className="google-icon" />
+                            Google
                         </button>
                     </div>
 
-                    <p className="register">
-                        ¿No tienes cuenta? <Link to="/register">Regístrate aquí</Link>
+                    <p className="register" style={{ marginTop: "1rem", textAlign: "center" }}>
+                        ¿No tienes cuenta? <Link to="/register" style={{ fontWeight: "bold" }}>Regístrate aquí</Link>
                     </p>
                 </form>
             </section>
