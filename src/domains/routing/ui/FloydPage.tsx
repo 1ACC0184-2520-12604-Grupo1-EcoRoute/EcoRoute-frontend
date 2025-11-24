@@ -11,7 +11,7 @@ import "leaflet/dist/leaflet.css";
 import "../../trade/ui/TradeDashboard.css";
 import { getSession } from "../../auth/model/authStore";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://ecoroute-backend-production.up.railway.app";
 
 type NodeGeo = {
     id: string;
