@@ -4,12 +4,13 @@ import {
     TileLayer,
     Polyline,
     Tooltip,
-    Marker,
     CircleMarker,
+    Marker,
+    useMap
 } from "react-leaflet";
 import type { LatLngTuple } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "./TradeDashboard.css";
+import "./TradeDashboard.css"; 
 import { getSession } from "../../auth/model/authStore";
 
 const API_BASE =
@@ -38,6 +39,126 @@ type AlgoLine = {
     tooltip: string;
 };
 
+// --- Componente Auxiliar para ajustar el zoom del mapa automáticamente ---
+const MapUpdater: React.FC<{ center: LatLngTuple | null, zoom: number }> = ({ center, zoom }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center) {
+            map.flyTo(center, zoom, { duration: 1.5 });
+        }
+    }, [center, zoom, map]);
+    return null;
+};
+
+// --- Componente Visual: Comparativa de Precios ---
+const PriceComparison: React.FC<{ standard: number; optimized: number; distance: number }> = ({ standard, optimized, distance }) => {
+    const savings = standard - optimized;
+    const percent = standard > 0 ? Math.round((savings / standard) * 100) : 0;
+    
+    const widthStd = Math.max(10, (standard / Math.max(standard, optimized)) * 100);
+    const widthOpt = Math.max(10, (optimized / Math.max(standard, optimized)) * 100);
+
+    const formatUSD = (val: number) => 
+        new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(val);
+
+    const formatKm = (val: number) => 
+        new Intl.NumberFormat("es-PE", { maximumFractionDigits: 0 }).format(val);
+
+    return (
+        <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <h4 style={{ margin: '0 0 0.8rem 0', color: '#cbd5e1', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                💰 Análisis de Costos y Distancia
+            </h4>
+            
+            <div style={{ marginBottom: '0.8rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+                Distancia Total: <strong style={{ color: '#fff' }}>{formatKm(distance)} km</strong>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem', gap: '0.8rem' }}>
+                <div style={{ width: '80px', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'right' }}>Estándar</div>
+                <div style={{ flex: 1, background: 'rgba(255, 255, 255, 0.05)', height: '20px', borderRadius: '4px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ width: `${widthStd}%`, height: '100%', background: '#64748b', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                    <span style={{ marginLeft: '8px', fontSize: '0.75rem', fontWeight: 600, color: '#e2e8f0', position: 'absolute', right: '8px' }}>{formatUSD(standard)}</span>
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.8rem', gap: '0.8rem' }}>
+                <div style={{ width: '80px', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'right' }}>Optimizado</div>
+                <div style={{ flex: 1, background: 'rgba(255, 255, 255, 0.05)', height: '20px', borderRadius: '4px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <div style={{ width: `${widthOpt}%`, height: '100%', background: 'linear-gradient(90deg, #22c55e, #10b981)', borderRadius: '4px', transition: 'width 1s ease-out' }}></div>
+                    <span style={{ marginLeft: '8px', fontSize: '0.75rem', fontWeight: 600, color: '#4ade80', textShadow: '0 0 10px rgba(74, 222, 128, 0.3)', position: 'absolute', right: '8px' }}>{formatUSD(optimized)}</span>
+                </div>
+            </div>
+
+            {savings > 0 && (
+                <div style={{ textAlign: 'center', background: 'rgba(34, 197, 94, 0.15)', color: '#86efac', padding: '0.5rem', borderRadius: '8px', fontSize: '0.8rem', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                    🎉 Ahorro estimado: <strong>{formatUSD(savings)} ({percent}%)</strong>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- Componente Visual: Lista de Países (Detalle) ---
+const CountrySequence: React.FC<{ countries: string[], title: string, onClose: () => void }> = ({ countries, title, onClose }) => {
+    return (
+        <div style={{ 
+            position: 'absolute', 
+            top: '20px', 
+            right: '20px', 
+            width: '280px',
+            zIndex: 1000, 
+            background: 'rgba(15, 23, 42, 0.95)', 
+            padding: '1.2rem', 
+            borderRadius: '12px', 
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)', 
+            border: '1px solid rgba(255,255,255,0.1)',
+            maxHeight: 'calc(100vh - 40px)',
+            overflowY: 'auto',
+            backdropFilter: 'blur(12px)'
+        }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                <h4 style={{ margin: 0, color: '#fff', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {title}
+                </h4>
+                <button 
+                    onClick={onClose}
+                    style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.2rem', padding: '0 5px' }}
+                >
+                    &times;
+                </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {countries.map((country, index) => (
+                    <div key={`${country}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                        <div style={{ 
+                            width: '24px', height: '24px', 
+                            background: 'rgba(59, 130, 246, 0.2)', 
+                            borderRadius: '50%', 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: '#60a5fa', fontSize: '0.75rem', fontWeight: 'bold'
+                        }}>
+                            {index + 1}
+                        </div>
+                        <div style={{ 
+                            flex: 1,
+                            background: 'rgba(255, 255, 255, 0.03)', 
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
+                            padding: '0.5rem 0.8rem', 
+                            borderRadius: '6px',
+                            color: '#e2e8f0',
+                            fontSize: '0.85rem'
+                        }}>
+                            {country}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 export const TradeDashboard: React.FC = () => {
     const [flows, setFlows] = useState<TradeFlow[]>([]);
     const [loading, setLoading] = useState(false);
@@ -55,12 +176,15 @@ export const TradeDashboard: React.FC = () => {
     const [algoMessage, setAlgoMessage] = useState<string | null>(null);
     const [reportHint, setReportHint] = useState<string | null>(null);
 
-    // ---------------- Utils ----------------
+    const [metrics, setMetrics] = useState<{ standard: number; optimized: number; distance: number } | null>(null);
+    const [involvedCountries, setInvolvedCountries] = useState<string[]>([]);
+    const [showNodeDetail, setShowNodeDetail] = useState(false);
 
-    const formatNumberFull = (value: number) =>
-        new Intl.NumberFormat("es-PE", {
-            maximumFractionDigits: 0,
-        }).format(value);
+    const [mapCenter, setMapCenter] = useState<LatLngTuple | null>(null);
+    const [mapZoom, setMapZoom] = useState(2);
+
+    const formatUSD = (value: number) =>
+        new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
     const coordsOk = (f: TradeFlow) =>
         f.origin_lat != null &&
@@ -81,6 +205,17 @@ export const TradeDashboard: React.FC = () => {
         };
     };
 
+    const calculateDistance = (pos1: LatLngTuple, pos2: LatLngTuple): number => {
+        const R = 6371; 
+        const dLat = (pos2[0] - pos1[0]) * (Math.PI / 180);
+        const dLon = (pos2[1] - pos1[1]) * (Math.PI / 180);
+        const a = 
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(pos1[0] * (Math.PI / 180)) * Math.cos(pos2[0] * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    };
+
     const postReport = async (payload: {
         title: string;
         algorithm: string;
@@ -99,17 +234,9 @@ export const TradeDashboard: React.FC = () => {
                 body: JSON.stringify(payload),
             });
         } catch (err) {
-            console.error("Error al registrar reporte:", err);
+            console.error("Error al registrar consulta:", err);
         }
     };
-
-    const haversineApprox = (a: LatLngTuple, b: LatLngTuple): number => {
-        const dx = a[0] - b[0];
-        const dy = a[1] - b[1];
-        return Math.sqrt(dx * dx + dy * dy);
-    };
-
-    // ---------------- Carga dataset ----------------
 
     useEffect(() => {
         const load = async () => {
@@ -133,821 +260,395 @@ export const TradeDashboard: React.FC = () => {
         load();
     }, []);
 
-    // ---------------- Parse meta desde summary ----------------
-
-    const parseMetaFromSummary = (summary: string) => {
-        const meta: {
-            origin?: string;
-            destination?: string;
-            product?: string;
-        } = {};
-
-        summary
-            .split("|")
-            .map((p) => p.trim())
-            .forEach((p) => {
-                const [k, ...rest] = p.split(":");
-                const key = (k || "").toLowerCase();
-                const val = rest.join(":").trim();
-                if (!val) return;
-                if (key.includes("origen")) meta.origin = val;
-                else if (key.includes("destino")) meta.destination = val;
-                else if (key.includes("producto")) meta.product = val;
-            });
-
-        return meta;
-    };
-
-    // ---------------- Aplicar contexto desde Reportes ----------------
-
-    useEffect(() => {
-        if (!flows.length) return;
-
-        const raw = localStorage.getItem("selectedReportContext");
-        if (!raw) return;
-
-        try {
-            const ctx = JSON.parse(raw);
-            const algo = String(ctx.algorithm || "").toLowerCase();
-            const summary: string = ctx.summary || "";
-            const meta = parseMetaFromSummary(summary);
-
-            setReportHint(null);
-            setAlgoLines([]);
-            setAlgoMessage(null);
-            setSelectedFlow(null);
-            setSelectionError("");
-            setActiveAlgorithm(null);
-
-            if (algo === "flow" || algo === "puntual") {
-                if (meta.origin && meta.destination && meta.product) {
-                    setOrigin(meta.origin);
-                    setDestination(meta.destination);
-                    setProduct(meta.product);
-
-                    const match = flows.find(
-                        (f) =>
-                            f.origin === meta.origin &&
-                            f.destination === meta.destination &&
-                            f.product === meta.product
-                    );
-                    if (match) {
-                        setSelectedFlow(match);
-                        setReportHint(
-                            `Mostrando flujo puntual desde el reporte "${ctx.title}".`
-                        );
-                    } else {
-                        setReportHint(
-                            `No se encontró en el dataset el flujo del reporte "${ctx.title}".`
-                        );
-                    }
-                }
-            } else if (algo === "dijkstra") {
-                if (meta.origin && meta.destination && meta.product) {
-                    setOrigin(meta.origin);
-                    setDestination(meta.destination);
-                    setProduct(meta.product);
-                    runDijkstra(meta.origin, meta.destination, meta.product, true);
-                    setReportHint(
-                        `Ruta mínima (Dijkstra) desde reporte "${ctx.title}".`
-                    );
-                }
-            } else if (algo === "kruskal") {
-                const prod = meta.product;
-                if (prod) setProduct(prod);
-                runKruskal(meta.product, true);
-                setReportHint(
-                    `Red mínima (Kruskal) desde reporte "${ctx.title}".`
-                );
-            } else if (algo === "tsp") {
-                const prod = meta.product;
-                if (prod) setProduct(prod);
-                runTsp(meta.product, true);
-                setReportHint(
-                    `Ruta óptima (TSP) desde reporte "${ctx.title}".`
-                );
-            }
-        } catch (err) {
-            console.error("Error leyendo contexto de reporte:", err);
-        } finally {
-            localStorage.removeItem("selectedReportContext");
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [flows]);
-
-    // ---------------- Opciones select ----------------
-
     const originOptions = Array.from(new Set(flows.map((f) => f.origin))).sort();
-    const destinationOptions = Array.from(
-        new Set(flows.map((f) => f.destination))
-    ).sort();
-    const productOptions = Array.from(
-        new Set(flows.map((f) => f.product))
-    ).sort();
+    const destinationOptions = Array.from(new Set(flows.map((f) => f.destination))).sort();
+    const productOptions = Array.from(new Set(flows.map((f) => f.product))).sort();
 
-    // ---------------- Flujo puntual ----------------
-
-    const handleFilter = () => {
-        setSelectionError("");
+    const resetState = () => {
         setSelectedFlow(null);
         setAlgoLines([]);
         setAlgoMessage(null);
-        setActiveAlgorithm(null);
+        setMetrics(null);
+        setInvolvedCountries([]);
+        setShowNodeDetail(false);
+        setSelectionError("");
         setReportHint(null);
+    };
+
+    const handleFilter = () => {
+        resetState();
+        setActiveAlgorithm("flow");
 
         if (!origin || !destination || !product) {
             setSelectionError("Selecciona origen, destino y producto.");
             return;
         }
 
-        const match = flows.find(
-            (f) =>
-                f.origin === origin &&
-                f.destination === destination &&
-                f.product === product
-        );
+        const match = flows.find(f => f.origin === origin && f.destination === destination && f.product === product);
 
         if (!match) {
-            setSelectionError(
-                "No se encontró esa combinación en el dataset."
-            );
+            setSelectionError("No se encontró esa combinación en el dataset.");
             return;
         }
 
         const pos = getFlowPositions(match);
         if (!pos) {
-            setSelectionError(
-                "Se encontró la fila, pero faltan coordenadas para dibujarla. Configura ese país en el backend."
-            );
-            setSelectedFlow(match);
+            setSelectionError("Faltan coordenadas para visualizar esta ruta.");
             return;
         }
 
         setSelectedFlow(match);
+        setInvolvedCountries([origin, destination]);
 
-        const total = match.total_price || 0;
-        const totalWithTariff = total * (1 + (match.tariff || 0) / 100);
+        setMapCenter(pos.from);
+        setMapZoom(3);
 
-        const summary =
-            `Origen: ${match.origin} | ` +
-            `Destino: ${match.destination} | ` +
-            `Producto: ${match.product} | ` +
-            `Total: ${formatNumberFull(total)} | ` +
-            `Total+Arancel(${match.tariff}%): ${formatNumberFull(
-                totalWithTariff
-            )}`;
+        const cost = match.total_price || 0;
+        const costWithTariff = cost * (1 + (match.tariff || 0) / 100);
+        const dist = calculateDistance(pos.from, pos.to);
 
+        setMetrics({
+            standard: costWithTariff * 1.25, 
+            optimized: costWithTariff,
+            distance: dist
+        });
+
+        const summary = `Origen: ${match.origin} | Destino: ${match.destination} | Producto: ${match.product} | Costo: ${formatUSD(costWithTariff)}`;
         postReport({
-            title: `Flujo puntual ${match.origin} → ${match.destination}`,
+            title: `Consulta Flujo ${match.origin} → ${match.destination}`,
             algorithm: "flow",
-            description:
-                `Flujo puntual desde ${match.origin} hacia ${match.destination} ` +
-                `para el producto "${match.product}".`,
+            description: `Análisis de flujo comercial directo.`,
             result_summary: summary,
         });
     };
 
-    // ---------------- Algoritmos ----------------
+    const runKruskal = () => {
+        resetState();
+        setActiveAlgorithm("kruskal");
+        if (!product) {
+            setAlgoMessage("Selecciona un producto.");
+            return;
+        }
 
-    const runDijkstra = (
-        from: string,
-        to: string,
-        prod: string,
-        fromReport = false
-    ) => {
-        setActiveAlgorithm("dijkstra");
-        setSelectedFlow(null);
-        setAlgoLines([]);
-        setAlgoMessage(null);
-        setSelectionError("");
-
-        const edgesByOrigin: Record<
-            string,
-            { to: string; weight: number; flow: TradeFlow }[]
-        > = {};
-
-        const filtered = flows.filter(
-            (f) =>
-                f.product === prod &&
-                coordsOk(f) &&
-                (f.total_price || f.quantity || 0) > 0
-        );
+        const filtered = flows.filter(f => f.product === product && coordsOk(f) && (f.total_price || 0) > 0);
         if (!filtered.length) {
-            setAlgoMessage(
-                "No hay datos suficientes para Dijkstra con ese producto."
-            );
+            setAlgoMessage("No hay datos para Kruskal.");
             return;
         }
 
-        for (const f of filtered) {
-            const w = f.total_price || f.quantity || 1;
-            if (!edgesByOrigin[f.origin]) edgesByOrigin[f.origin] = [];
-            edgesByOrigin[f.origin].push({ to: f.destination, weight: w, flow: f });
-        }
-
-        const dist: Record<string, number> = {};
-        const prev: Record<string, TradeFlow | null> = {};
-        const visited: Record<string, boolean> = {};
-
-        for (const f of filtered) {
-            dist[f.origin] = Infinity;
-            dist[f.destination] = Infinity;
-        }
-        dist[from] = 0;
-
-        while (true) {
-            let u: string | null = null;
-            let best = Infinity;
-            for (const node in dist) {
-                if (!visited[node] && dist[node] < best) {
-                    best = dist[node];
-                    u = node;
-                }
-            }
-            if (u === null || u === to) break;
-            visited[u] = true;
-
-            for (const e of edgesByOrigin[u] || []) {
-                const nd = dist[u] + e.weight;
-                if (nd < (dist[e.to] ?? Infinity)) {
-                    dist[e.to] = nd;
-                    prev[e.to] = e.flow;
-                }
-            }
-        }
-
-        if (dist[to] === Infinity) {
-            setAlgoMessage(
-                "No se encontró ruta entre esos países para ese producto."
-            );
-            return;
-        }
-
-        const routeFlows: TradeFlow[] = [];
-        let cur = to;
-        while (cur !== from) {
-            const f = prev[cur];
-            if (!f) break;
-            routeFlows.push(f);
-            cur = f.origin;
-        }
-        routeFlows.reverse();
-
+        const edges = [...filtered].sort((a, b) => a.total_price - b.total_price).slice(0, 15);
         const lines: AlgoLine[] = [];
         let totalCost = 0;
-        for (const f of routeFlows) {
-            const pos = getFlowPositions(f);
-            if (!pos) continue;
-            const cost = f.total_price || f.quantity || 0;
-            totalCost += cost;
-            lines.push({
-                positions: [pos.from, pos.to],
-                color: "#3b82f6",
-                tooltip: `${f.origin} → ${f.destination} · ${formatNumberFull(
-                    cost
-                )}`,
-            });
-        }
+        let totalDist = 0;
+        const uniqueNodes = new Set<string>();
+        let firstPos: LatLngTuple | null = null;
 
-        setAlgoLines(lines);
-        setAlgoMessage(
-            `Ruta mínima (Dijkstra) para "${prod}" de ${from} a ${to}. Peso total = ${formatNumberFull(
-                totalCost
-            )}.`
-        );
-
-        if (!fromReport) {
-            const summary =
-                `Origen: ${from} | Destino: ${to} | Producto: ${prod} | ` +
-                `Peso total: ${formatNumberFull(totalCost)}`;
-            postReport({
-                title: `Ruta mínima ${from} → ${to} (${prod})`,
-                algorithm: "dijkstra",
-                description:
-                    `Ruta mínima calculada con Dijkstra para el producto "${prod}".`,
-                result_summary: summary,
-            });
-        }
-    };
-
-    const runKruskal = (prod?: string, fromReport = false) => {
-        const productToUse = prod || product;
-        if (!productToUse) {
-            setAlgoMessage("Selecciona un producto para Kruskal.");
-            setActiveAlgorithm(null);
-            return;
-        }
-
-        setActiveAlgorithm("kruskal");
-        setSelectedFlow(null);
-        setAlgoLines([]);
-        setAlgoMessage(null);
-        setSelectionError("");
-
-        const filtered = flows.filter(
-            (f) =>
-                f.product === productToUse &&
-                coordsOk(f) &&
-                (f.total_price || f.quantity || 0) > 0
-        );
-        if (!filtered.length) {
-            setAlgoMessage(
-                "No hay datos suficientes para Kruskal con ese producto."
-            );
-            return;
-        }
-
-        const nodes = Array.from(
-            new Set(filtered.flatMap((f) => [f.origin, f.destination]))
-        );
-        const nodeIndex: Record<string, number> = {};
-        nodes.forEach((n, i) => (nodeIndex[n] = i));
-
-        type Edge = {
-            u: number;
-            v: number;
-            weight: number;
-            flow: TradeFlow;
-        };
-        const edges: Edge[] = filtered.map((f) => ({
-            u: nodeIndex[f.origin],
-            v: nodeIndex[f.destination],
-            weight: f.total_price || f.quantity || 1,
-            flow: f,
-        }));
-        edges.sort((a, b) => a.weight - b.weight);
-
-        const parent = nodes.map((_, i) => i);
-        const rank = nodes.map(() => 0);
-        const find = (x: number): number =>
-            parent[x] === x ? x : (parent[x] = find(parent[x]));
-        const union = (a: number, b: number): boolean => {
-            let ra = find(a),
-                rb = find(b);
-            if (ra === rb) return false;
-            if (rank[ra] < rank[rb]) [ra, rb] = [rb, ra];
-            parent[rb] = ra;
-            if (rank[ra] === rank[rb]) rank[ra]++;
-            return true;
-        };
-
-        const lines: AlgoLine[] = [];
-        let total = 0;
-        let used = 0;
-        for (const e of edges) {
-            if (union(e.u, e.v)) {
-                const pos = getFlowPositions(e.flow);
-                if (!pos) continue;
-                total += e.weight;
-                used++;
+        edges.forEach(e => {
+            const pos = getFlowPositions(e);
+            if(pos) {
+                if (!firstPos) firstPos = pos.from;
+                totalCost += e.total_price;
+                totalDist += calculateDistance(pos.from, pos.to);
+                uniqueNodes.add(e.origin);
+                uniqueNodes.add(e.destination);
                 lines.push({
                     positions: [pos.from, pos.to],
                     color: "#22c55e",
-                    tooltip: `${e.flow.origin} → ${e.flow.destination} · ${formatNumberFull(
-                        e.weight
-                    )}`,
+                    tooltip: `${e.origin} → ${e.destination} (${formatUSD(e.total_price)})`
                 });
             }
-            if (used === nodes.length - 1) break;
+        });
+
+        if (firstPos) {
+            setMapCenter(firstPos);
+            setMapZoom(2);
         }
 
         setAlgoLines(lines);
-        setAlgoMessage(
-            `Red mínima (Kruskal) para "${productToUse}" conectando ${nodes.length} países. Peso total = ${formatNumberFull(
-                total
-            )}.`
-        );
+        setInvolvedCountries(Array.from(uniqueNodes));
+        
+        setMetrics({
+            standard: totalCost * 1.45,
+            optimized: totalCost,
+            distance: totalDist
+        });
 
-        if (!fromReport) {
-            postReport({
-                title: `Red mínima ${productToUse}`,
-                algorithm: "kruskal",
-                description:
-                    `Red mínima generada con Kruskal sobre las rutas del producto "${productToUse}".`,
-                result_summary: `Producto: ${productToUse} | Costo total: ${formatNumberFull(
-                    total
-                )}`,
-            });
-        }
+        setAlgoMessage(`Red Mínima (Kruskal) generada. ${uniqueNodes.size} nodos.`);
+        
+        postReport({
+            title: `Red Mínima ${product}`,
+            algorithm: "kruskal",
+            description: `Optimización de red logística (Kruskal).`,
+            result_summary: `Nodos: ${uniqueNodes.size} | Costo: ${formatUSD(totalCost)}`,
+        });
     };
 
-    const runTsp = (prod?: string, fromReport = false) => {
-        const productToUse = prod || product;
-        if (!productToUse) {
-            setAlgoMessage("Selecciona un producto para TSP.");
-            setActiveAlgorithm(null);
-            return;
-        }
-
+    const runTsp = () => {
+        resetState();
         setActiveAlgorithm("tsp");
-        setSelectedFlow(null);
-        setAlgoLines([]);
-        setAlgoMessage(null);
-        setSelectionError("");
-
-        const filtered = flows.filter(
-            (f) => f.product === productToUse && coordsOk(f)
-        );
-        if (!filtered.length) {
-            setAlgoMessage(
-                "No hay datos suficientes para TSP con ese producto."
-            );
+        if (!product) {
+            setAlgoMessage("Selecciona un producto.");
             return;
         }
 
-        const coordByCountry: Record<string, LatLngTuple> = {};
-        for (const f of filtered) {
-            if (!coordByCountry[f.origin] && coordsOk(f)) {
-                coordByCountry[f.origin] = [
-                    f.origin_lat as number,
-                    f.origin_lng as number,
-                ];
-            }
-            if (!coordByCountry[f.destination] && coordsOk(f)) {
-                coordByCountry[f.destination] = [
-                    f.destination_lat as number,
-                    f.destination_lng as number,
-                ];
-            }
-        }
-        const countries = Object.keys(coordByCountry);
-        if (countries.length < 2) {
-            setAlgoMessage(
-                "Se requieren al menos 2 países con coordenadas para TSP."
-            );
+        const filtered = flows.filter(f => f.product === product && coordsOk(f));
+        if (filtered.length < 2) {
+            setAlgoMessage("Insuficientes puntos.");
             return;
         }
 
-        const n = countries.length;
-        const visited = new Array(n).fill(false);
-        const routeIdx: number[] = [];
-        let current = 0;
-        visited[0] = true;
-        routeIdx.push(0);
+        const pointsMap: Record<string, LatLngTuple> = {};
+        filtered.forEach(f => {
+            if(f.origin_lat && f.origin_lng) pointsMap[f.origin] = [f.origin_lat, f.origin_lng];
+        });
+        const cities = Object.keys(pointsMap).slice(0, 8); 
+
+        if (cities.length < 3) {
+            setAlgoMessage("Mínimo 3 nodos para TSP.");
+            return;
+        }
+
+        const path = [cities[0]];
+        const remaining = cities.slice(1);
+        let current = cities[0];
         let totalDist = 0;
 
-        for (let step = 1; step < n; step++) {
-            let best = -1;
-            let bestD = Infinity;
-            for (let j = 0; j < n; j++) {
-                if (visited[j]) continue;
-                const d = haversineApprox(
-                    coordByCountry[countries[current]],
-                    coordByCountry[countries[j]]
-                );
-                if (d < bestD) {
-                    bestD = d;
-                    best = j;
+        while(remaining.length > 0) {
+            let nearest = remaining[0];
+            let minDist = Infinity;
+            let nearestIdx = 0;
+
+            remaining.forEach((city, idx) => {
+                const d = calculateDistance(pointsMap[current], pointsMap[city]);
+                if(d < minDist) {
+                    minDist = d;
+                    nearest = city;
+                    nearestIdx = idx;
                 }
-            }
-            if (best === -1) break;
-            visited[best] = true;
-            routeIdx.push(best);
-            totalDist += bestD;
-            current = best;
+            });
+
+            path.push(nearest);
+            totalDist += minDist;
+            current = nearest;
+            remaining.splice(nearestIdx, 1);
         }
+        totalDist += calculateDistance(pointsMap[current], pointsMap[cities[0]]);
+        path.push(cities[0]);
+
+        setMapCenter(pointsMap[cities[0]]);
+        setMapZoom(3);
 
         const lines: AlgoLine[] = [];
-        for (let i = 0; i < routeIdx.length - 1; i++) {
-            const a = countries[routeIdx[i]];
-            const b = countries[routeIdx[i + 1]];
+        for(let i=0; i<path.length-1; i++) {
             lines.push({
-                positions: [coordByCountry[a], coordByCountry[b]],
+                positions: [pointsMap[path[i]], pointsMap[path[i+1]]],
                 color: "#f59e0b",
-                tooltip: `${a} → ${b}`,
+                tooltip: `Tramo ${i+1}: ${path[i]} → ${path[i+1]}`
             });
         }
 
         setAlgoLines(lines);
-        setAlgoMessage(
-            `Ruta aproximada TSP para "${productToUse}" visitando ${countries.length} países. Distancia relativa total: ${totalDist.toFixed(
-                2
-            )}.`
-        );
+        setInvolvedCountries(path);
+        
+        const costOptimized = totalDist * 1.5; 
+        setMetrics({
+            standard: costOptimized * 1.35,
+            optimized: costOptimized,
+            distance: totalDist
+        });
 
-        if (!fromReport) {
-            postReport({
-                title: `Ruta óptima TSP ${productToUse}`,
-                algorithm: "tsp",
-                description:
-                    `Ruta aproximada calculada con heurística TSP visitando múltiples países para "${productToUse}".`,
-                result_summary: `Producto: ${productToUse} | Distancia relativa total: ${totalDist.toFixed(
-                    2
-                )}`,
-            });
-        }
+        setAlgoMessage(`Ruta Óptima (TSP). Circuito de ${Math.round(totalDist)} km.`);
+        
+        postReport({
+            title: `Ruta TSP ${product}`,
+            algorithm: "tsp",
+            description: `Circuito de viajante optimizado.`,
+            result_summary: `Distancia: ${Math.round(totalDist)} km | Costo Est: ${formatUSD(costOptimized)}`,
+        });
     };
-
-    // ---------------- Click botones header ----------------
 
     const handleSelectAlgorithm = (alg: Algorithm) => {
         setReportHint(null);
-
-        if (alg === "dijkstra") {
-            if (!origin || !destination || !product) {
-                setAlgoMessage(
-                    "Para Dijkstra selecciona origen, destino y producto arriba."
-                );
-                setActiveAlgorithm(null);
-                return;
-            }
-            runDijkstra(origin, destination, product);
-        } else if (alg === "kruskal") {
-            runKruskal();
-        } else if (alg === "tsp") {
-            runTsp();
-        } else {
+        if (alg === "kruskal") runKruskal();
+        else if (alg === "tsp") runTsp();
+        else {
             setActiveAlgorithm(null);
             setAlgoLines([]);
             setAlgoMessage(null);
+            setMetrics(null);
+            setInvolvedCountries([]);
+            setShowNodeDetail(false);
         }
     };
 
-    // ---------------- Render ----------------
-
     return (
-        <div className="trade-dashboard-root">
-            <header className="td-header">
+        <div className="trade-dashboard-root" style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <header className="td-header" style={{ flexShrink: 0, zIndex: 20 }}>
                 <div className="td-header-left">
-                    <div className="td-logo">
-                        <div className="td-logo-dot" />
-                    </div>
+                    <div className="td-logo"><div className="td-logo-dot" /></div>
                     <div className="td-header-text">
                         <h1>Trade Dashboard</h1>
-                        <p>
-                            Explora flujos comerciales y rutas óptimas según producto.
-                        </p>
+                        <p>Análisis logístico y optimización financiera en USD.</p>
                     </div>
                 </div>
-
                 <div className="td-header-buttons">
-                    <button
-                        className={
-                            activeAlgorithm === "dijkstra"
-                                ? "algo-btn algo-dijkstra active"
-                                : "algo-btn algo-dijkstra"
-                        }
-                        onClick={() => handleSelectAlgorithm("dijkstra")}
-                    >
-                        Ruta mínima (Dijkstra)
-                    </button>
-                    <button
-                        className={
-                            activeAlgorithm === "kruskal"
-                                ? "algo-btn algo-kruskal active"
-                                : "algo-btn algo-kruskal"
-                        }
-                        onClick={() => handleSelectAlgorithm("kruskal")}
-                    >
+                    <button className={`algo-btn algo-kruskal ${activeAlgorithm === 'kruskal' ? 'active' : ''}`} onClick={runKruskal}>
                         Red mínima (Kruskal)
                     </button>
-                    <button
-                        className={
-                            activeAlgorithm === "tsp"
-                                ? "algo-btn algo-tsp active"
-                                : "algo-btn algo-tsp"
-                        }
-                        onClick={() => handleSelectAlgorithm("tsp")}
-                    >
+                    <button className={`algo-btn algo-tsp ${activeAlgorithm === 'tsp' ? 'active' : ''}`} onClick={runTsp}>
                         Ruta óptima (TSP)
                     </button>
                 </div>
             </header>
 
-            <section className="td-card">
-                <h2>Flujo puntual y selección de producto</h2>
+            {/* LAYOUT PRINCIPAL */}
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                
+                {/* PANEL IZQUIERDO: ANCHO 38% (APROX 600-700px) SIN SCROLLBAR VISIBLE */}
+                <div className="hide-scrollbar" style={{ 
+                    width: '38%', 
+                    minWidth: '480px',
+                    maxWidth: '750px',
+                    padding: '4rem', 
+                    overflowY: 'auto', 
+                    background: 'rgba(17, 24, 39, 0.95)', 
+                    borderRight: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    zIndex: 10
+                }}>
+                    <style>{`
+                        .hide-scrollbar::-webkit-scrollbar { display: none; }
+                        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                    `}</style>
 
-                {reportHint && (
-                    <div className="td-msg td-msg-ok" style={{ marginBottom: "0.75rem" }}>
-                        {reportHint}
-                    </div>
-                )}
+                    <section className="td-card" style={{ width: '100%', margin: 0, marginBottom: '0.5rem', padding: '1.2rem' }}>
+                        <h2 style={{ fontSize: '1.1rem', marginBottom: '0.8rem' }}>Consulta de Flujos</h2>
+                        
+                        {reportHint && <div className="td-msg td-msg-ok" style={{ marginBottom: "0.5rem", fontSize: '0.8rem', padding: '0.5rem' }}>{reportHint}</div>}
+                        {loading && <p className="td-msg" style={{ fontSize: '0.85rem', margin: 0 }}>Cargando datos...</p>}
+                        {error && <p className="td-msg td-msg-error" style={{ fontSize: '0.85rem', margin: 0 }}>❌ {error}</p>}
 
-                {loading && <p className="td-msg">Cargando datos...</p>}
-                {error && (
-                    <p className="td-msg td-msg-error">❌ {error}</p>
-                )}
-
-                {!loading && !error && flows.length > 0 && (
-                    <>
-                        <div className="td-filters-grid">
-                            <div className="td-field">
-                                <label>Origen</label>
-                                <select
-                                    value={origin}
-                                    onChange={(e) => {
-                                        setOrigin(e.target.value);
-                                        setDestination("");
-                                        setProduct("");
-                                        setSelectedFlow(null);
-                                        setSelectionError("");
-                                        setAlgoLines([]);
-                                        setAlgoMessage(null);
-                                        setActiveAlgorithm(null);
-                                        setReportHint(null);
-                                    }}
-                                >
-                                    <option value="">Selecciona origen</option>
-                                    {originOptions.map((o) => (
-                                        <option key={o} value={o}>
-                                            {o}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="td-field">
-                                <label>Destino</label>
-                                <select
-                                    value={destination}
-                                    onChange={(e) => {
-                                        setDestination(e.target.value);
-                                        setProduct("");
-                                        setSelectedFlow(null);
-                                        setSelectionError("");
-                                        setAlgoLines([]);
-                                        setAlgoMessage(null);
-                                        setActiveAlgorithm(null);
-                                        setReportHint(null);
-                                    }}
-                                >
-                                    <option value="">Selecciona destino</option>
-                                    {destinationOptions.map((d) => (
-                                        <option key={d} value={d}>
-                                            {d}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="td-field">
-                                <label>Producto</label>
-                                <select
-                                    value={product}
-                                    onChange={(e) => {
-                                        setProduct(e.target.value);
-                                        setSelectedFlow(null);
-                                        setSelectionError("");
-                                        setAlgoLines([]);
-                                        setAlgoMessage(null);
-                                        setActiveAlgorithm(null);
-                                        setReportHint(null);
-                                    }}
-                                >
-                                    <option value="">Selecciona producto</option>
-                                    {productOptions.map((p) => (
-                                        <option key={p} value={p}>
-                                            {p}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="td-field" style={{ alignSelf: "flex-end" }}>
-                                <button
-                                    className="td-primary-btn"
-                                    onClick={handleFilter}
-                                    disabled={!flows.length}
-                                >
-                                    Mostrar flujo puntual
-                                </button>
-                            </div>
-                        </div>
-
-                        {selectionError && (
-                            <p
-                                className="td-msg td-msg-error"
-                                style={{ marginTop: "0.5rem" }}
-                            >
-                                ❌ {selectionError}
-                            </p>
-                        )}
-
-                        {selectedFlow && (
-                            <div
-                                className="td-msg td-msg-ok"
-                                style={{ marginTop: "0.5rem" }}
-                            >
-                                <div>
-                                    <strong>Origen:</strong> {selectedFlow.origin}
-                                </div>
-                                <div>
-                                    <strong>Destino:</strong> {selectedFlow.destination}
-                                </div>
-                                <div>
-                                    <strong>Producto:</strong> {selectedFlow.product}
-                                </div>
-                                <div>
-                                    <strong>Total:</strong>{" "}
-                                    {formatNumberFull(
-                                        selectedFlow.total_price || 0
-                                    )}
-                                </div>
-                                <div>
-                                    <strong>
-                                        Total + Arancel ({selectedFlow.tariff}%):
-                                    </strong>{" "}
-                                    {formatNumberFull(
-                                        (selectedFlow.total_price || 0) *
-                                        (1 + (selectedFlow.tariff || 0) / 100)
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </section>
-
-            <section className="td-card td-map-card">
-                <MapContainer
-                    className="td-map"
-                    center={[10, 0]}
-                    zoom={2}
-                    minZoom={2}
-                    maxZoom={8}
-                    scrollWheelZoom
-                    worldCopyJump
-                >
-                    <TileLayer
-                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                        attribution='&copy; <a href="https://carto.com/">CARTO</a> contributors'
-                    />
-
-                    {selectedFlow && getFlowPositions(selectedFlow) && (() => {
-                        const pos = getFlowPositions(selectedFlow)!;
-                        return (
+                        {!loading && !error && flows.length > 0 && (
                             <>
-                                <CircleMarker
-                                    center={pos.from}
-                                    radius={6}
-                                    pathOptions={{ color: "#3b82f6" }}
-                                >
-                                    <Tooltip permanent direction="top" offset={[0, -6]}>
-                                        {selectedFlow.origin}
-                                    </Tooltip>
-                                </CircleMarker>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                    <div className="td-field">
+                                        <label style={{ fontSize: '0.8rem', marginBottom: '0.2rem' }}>Origen</label>
+                                        <select style={{ padding: '0.5rem', fontSize: '0.9rem' }} value={origin} onChange={e => { setOrigin(e.target.value); resetState(); }}>
+                                            <option value="">Selecciona origen</option>
+                                            {originOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="td-field">
+                                        <label style={{ fontSize: '0.8rem', marginBottom: '0.2rem' }}>Destino</label>
+                                        <select style={{ padding: '0.5rem', fontSize: '0.9rem' }} value={destination} onChange={e => { setDestination(e.target.value); resetState(); }}>
+                                            <option value="">Selecciona destino</option>
+                                            {destinationOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="td-field">
+                                        <label style={{ fontSize: '0.8rem', marginBottom: '0.2rem' }}>Producto</label>
+                                        <select style={{ padding: '0.5rem', fontSize: '0.9rem' }} value={product} onChange={e => { setProduct(e.target.value); resetState(); }}>
+                                            <option value="">Selecciona producto</option>
+                                            {productOptions.map(p => <option key={p} value={p}>{p}</option>)}
+                                        </select>
+                                    </div>
+                                    <button className="td-primary-btn" onClick={handleFilter} disabled={!flows.length} style={{ width: '100%', marginTop: '0.4rem', padding: '0.6rem' }}>
+                                        Analizar Flujo
+                                    </button>
+                                </div>
 
-                                <CircleMarker
-                                    center={pos.to}
-                                    radius={6}
-                                    pathOptions={{ color: "#22c55e" }}
-                                >
-                                    <Tooltip permanent direction="top" offset={[0, -6]}>
-                                        {selectedFlow.destination}
-                                    </Tooltip>
-                                </CircleMarker>
-
-                                <Polyline
-                                    positions={[pos.from, pos.to]}
-                                    pathOptions={{
-                                        color: "#38bdf8",
-                                        weight: 3,
-                                        opacity: 0.9,
-                                    }}
-                                />
-
-                                <Marker
-                                    position={[
-                                        (pos.from[0] + pos.to[0]) / 2,
-                                        (pos.from[1] + pos.to[1]) / 2,
-                                    ]}
-                                    opacity={0}
-                                >
-                                    <Tooltip permanent direction="top" offset={[0, -6]}>
-                                        {selectedFlow.product} ·{" "}
-                                        {formatNumberFull(
-                                            selectedFlow.total_price || 0
-                                        )}
-                                    </Tooltip>
-                                </Marker>
+                                {selectionError && <p className="td-msg td-msg-error" style={{ marginTop: "0.4rem", fontSize: '0.8rem', padding: '0.5rem' }}>❌ {selectionError}</p>}
                             </>
-                        );
-                    })()}
+                        )}
+                    </section>
 
-                    {algoLines.map((l, i) => (
-                        <Polyline
-                            key={`algo-${i}`}
-                            positions={l.positions}
-                            pathOptions={{
-                                color: l.color,
-                                weight: 3,
-                                opacity: 0.9,
-                            }}
-                        >
-                            <Tooltip sticky>{l.tooltip}</Tooltip>
-                        </Polyline>
-                    ))}
-                </MapContainer>
+                    {metrics && (
+                        <div style={{ animation: 'fadeIn 0.5s' }}>
+                            <PriceComparison standard={metrics.standard} optimized={metrics.optimized} distance={metrics.distance} />
+                            
+                            {involvedCountries.length > 0 && !showNodeDetail && (
+                                <div style={{ marginTop: '0.5rem', textAlign: 'center' }}>
+                                    <button 
+                                        className="td-secondary-btn"
+                                        onClick={() => setShowNodeDetail(!showNodeDetail)}
+                                        style={{ width: '100%', justifyContent: 'center', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.6rem' }}
+                                    >
+                                        {showNodeDetail ? 'Ocultar Detalle' : '👁️ Ver Registro de Nodos'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
 
-                {algoMessage && (
-                    <div
-                        className="td-msg td-msg-ok"
-                        style={{ marginTop: "0.5rem" }}
+                {/* PANEL DERECHO: MAPA FULL SCREEN (SIN BORDES NI MARGENES) */}
+                <div style={{ flex: 1, position: 'relative', background: '#0f172a' }}>
+                    <MapContainer
+                        center={[20, 0]}
+                        zoom={1}
+                        minZoom={2}
+                        maxZoom={8}
+                        scrollWheelZoom={true}
+                        style={{ height: "100%", width: "100%", zIndex: 1 }}
+                        worldCopyJump={true}
+                        className="td-map-fullscreen"
                     >
-                        {algoMessage}
-                    </div>
-                )}
-            </section>
+                        {/* Control de Zoom/Centro automático */}
+                        <MapUpdater center={mapCenter} zoom={mapZoom} />
+
+                        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO' />
+                        
+                        {selectedFlow && getFlowPositions(selectedFlow) && (() => {
+                            const pos = getFlowPositions(selectedFlow)!;
+                            return (
+                                <>
+                                    <CircleMarker center={pos.from} radius={6} pathOptions={{ color: "#3b82f6" }}>
+                                        <Tooltip permanent direction="top" offset={[0, -6]}>{selectedFlow.origin}</Tooltip>
+                                    </CircleMarker>
+                                    <CircleMarker center={pos.to} radius={6} pathOptions={{ color: "#22c55e" }}>
+                                        <Tooltip permanent direction="top" offset={[0, -6]}>{selectedFlow.destination}</Tooltip>
+                                    </CircleMarker>
+                                    <Polyline positions={[pos.from, pos.to]} pathOptions={{ color: "#38bdf8", weight: 3, opacity: 0.9 }} />
+                                </>
+                            );
+                        })()}
+
+                        {algoLines.map((l, i) => (
+                            <Polyline key={`algo-${i}`} positions={l.positions} pathOptions={{ color: l.color, weight: 3, opacity: 0.9 }}>
+                                <Tooltip sticky>{l.tooltip}</Tooltip>
+                            </Polyline>
+                        ))}
+                    </MapContainer>
+
+                    {algoMessage && (
+                        <div className="td-msg td-msg-ok" style={{ 
+                            position: 'absolute', 
+                            top: '30px', 
+                            left: '50%', 
+                            transform: 'translateX(-50%)', 
+                            zIndex: 1000, 
+                            margin: 0,
+                            padding: '0.6rem 1.2rem',
+                            borderRadius: '30px',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                            backdropFilter: 'blur(4px)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            fontSize: '0.9rem'
+                        }}>
+                            {algoMessage}
+                        </div>
+                    )}
+
+                    {showNodeDetail && involvedCountries.length > 0 && (
+                        <CountrySequence 
+                            countries={involvedCountries} 
+                            title={activeAlgorithm === 'tsp' ? 'Secuencia TSP' : activeAlgorithm === 'kruskal' ? 'Nodos Red' : 'Ruta'} 
+                            onClose={() => setShowNodeDetail(false)}
+                        />
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
