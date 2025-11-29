@@ -134,7 +134,7 @@ export const ReportsPage: React.FC = () => {
     return (
         <div className="td-card reports-wrapper">
             <div className="reports-top-bar">
-                <h2>Historial de Reportes</h2>
+                <h2>Historial de Consultas</h2>
                 
                 {/* --- BARRA DE FILTROS --- */}
                 <div className="filters-container">
