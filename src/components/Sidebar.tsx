@@ -25,7 +25,7 @@ const Sidebar: React.FC = () => {
                     Floyd-Warshall
                 </NavLink>
                 <NavLink to="/reportes" className="nav-item">
-                    Reportes
+                    Historial
                 </NavLink>
                 <NavLink to="/perfil" className="nav-item">
                     Perfil

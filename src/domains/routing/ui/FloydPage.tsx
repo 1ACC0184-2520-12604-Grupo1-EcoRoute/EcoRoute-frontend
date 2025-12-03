@@ -8,7 +8,7 @@ import {
 } from "react-leaflet";
 import type { LatLngTuple } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "../../trade/ui/TradeDashboard.css";
+import "./FloydPage.css";
 import { getSession } from "../../auth/model/authStore";
 
 const API_BASE = "https://ecoroute-backend-production.up.railway.app";
@@ -52,81 +52,78 @@ export const FloydPage: React.FC = () => {
     const [loadingRuta, setLoadingRuta] = useState(false);
 
     const formatNumber = (n: number) =>
-        new Intl.NumberFormat("es-PE", {
-            maximumFractionDigits: 2,
-        }).format(n);
+        new Intl.NumberFormat("es-PE", { maximumFractionDigits: 2 }).format(n);
 
+    /* =======================
+       Cargar nodos del grafo
+    ======================= */
     useEffect(() => {
-        const loadNodes = async () => {
+        const load = async () => {
             setLoadingNodes(true);
-            setErrorNodes("");
             try {
                 const res = await fetch(`${API_BASE}/api/nodes`);
-                if (!res.ok) {
-                    const data = await res.json().catch(() => ({}));
-                    throw new Error(data.detail || "No se pudieron cargar los nodos.");
-                }
                 const data = await res.json();
+
                 const list: string[] = data.nodes || [];
                 const g = data.geo || {};
 
-                const parsed: NodeGeo[] = list.map((id) => ({
+                const parsed = list.map((id) => ({
                     id,
                     lat: g[id]?.[0],
                     lon: g[id]?.[1],
                 }));
+
                 setNodes(parsed);
+
                 const geoMap: Record<string, LatLngTuple> = {};
                 parsed.forEach((n) => {
-                    if (typeof n.lat === "number" && typeof n.lon === "number") {
-                        geoMap[n.id] = [n.lat, n.lon];
-                    }
+                    if (n.lat && n.lon) geoMap[n.id] = [n.lat, n.lon];
                 });
+
                 setGeo(geoMap);
             } catch (err: any) {
-                console.error(err);
-                setErrorNodes(err.message || "Error al cargar nodos.");
+                setErrorNodes("No se pudieron cargar los nodos.");
             } finally {
                 setLoadingNodes(false);
             }
         };
 
-        loadNodes();
+        load();
     }, []);
 
-    const postReport = async (payload: {
-        title: string;
-        algorithm: string;
-        description: string;
-        result_summary: string;
-    }) => {
+    /* =======================
+       Registrar reporte
+    ======================= */
+    const postReport = async (p: any) => {
         try {
             const { token } = getSession();
             if (!token) return;
+
             await fetch(`${API_BASE}/reports`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(p),
             });
-        } catch (err) {
-            console.error("Error al registrar reporte:", err);
-        }
+        } catch {}
     };
 
+    /* =======================
+       Calcular ruta óptima
+    ======================= */
     const handleCalcular = async (e: React.FormEvent) => {
         e.preventDefault();
-        setErrorRuta("");
         setRuta(null);
+        setErrorRuta("");
 
         if (!origen || !destino) {
             setErrorRuta("Selecciona origen y destino.");
             return;
         }
         if (origen === destino) {
-            setErrorRuta("Origen y destino no pueden ser iguales.");
+            setErrorRuta("El origen y destino no pueden ser iguales.");
             return;
         }
 
@@ -134,9 +131,7 @@ export const FloydPage: React.FC = () => {
         try {
             const res = await fetch(`${API_BASE}/ruta-optima`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     algoritmo: "floyd-warshall",
                     criterio,
@@ -147,216 +142,155 @@ export const FloydPage: React.FC = () => {
             });
 
             const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.detail || "No se pudo calcular ruta óptima.");
-            }
+            if (!res.ok) throw new Error(data.detail);
 
-            const rutaResp: RutaOptimaResponse = data;
-            setRuta(rutaResp);
-
-            const resumen =
-                `Ruta: ${rutaResp.ruta.join(" → ")} | ` +
-                `Tipo: ${rutaResp.tipo_ruta} | ` +
-                `Distancia: ${formatNumber(rutaResp.distancia_total)} km | ` +
-                `Tiempo: ${formatNumber(rutaResp.tiempo_total)} h | ` +
-                `Costo: ${formatNumber(rutaResp.costo_total)} USD`;
+            setRuta(data);
 
             await postReport({
                 title: `Ruta óptima Floyd-Warshall ${origen} → ${destino}`,
                 algorithm: "floyd-warshall",
-                description:
-                    `Ruta óptima calculada con Floyd-Warshall (${criterio})` +
-                    (productoId
-                        ? ` para el producto "${productoId}".`
-                        : " sin producto específico."),
-                result_summary: resumen,
+                description: `Ruta óptima usando matriz de caminos mínimos (${criterio})`,
+                result_summary: `Ruta: ${data.ruta.join(" → ")}`,
             });
+
         } catch (err: any) {
-            console.error(err);
-            setErrorRuta(err.message || "Error al calcular ruta.");
+            setErrorRuta(err.message);
         } finally {
             setLoadingRuta(false);
         }
     };
 
-    const buildPolyline = (): LatLngTuple[] => {
-        if (!ruta) return [];
-        const line: LatLngTuple[] = [];
-        ruta.ruta.forEach((id) => {
-            const c = geo[id];
-            if (c) line.push(c);
-        });
-        return line;
-    };
+    /* =======================
+       Construir polilínea
+    ======================= */
+    const polyline: LatLngTuple[] =
+        ruta?.ruta.map((id) => geo[id]).filter(Boolean) as LatLngTuple[] || [];
 
-    const polyline = buildPolyline();
-
+    /* =======================
+       RENDER
+    ======================= */
     return (
-        <div className="trade-dashboard-root">
-            <section className="td-card">
-                <h2>Ruta óptima - Floyd-Warshall</h2>
-                <p style={{ marginTop: 4, color: "#9ca3af", fontSize: "0.9rem" }}>
-                    Calcula rutas óptimas usando la matriz de caminos mínimos entre todos
-                    los pares del grafo logístico.
-                </p>
+        <div className="floyd-root">
 
-                {loadingNodes && (
-                    <p className="td-msg">Cargando nodos del grafo...</p>
-                )}
-                {errorNodes && (
-                    <p className="td-msg td-msg-error">❌ {errorNodes}</p>
-                )}
+            {/* HEADER PREMIUM */}
+            <div className="floyd-header">
+                <div className="floyd-header-icon">●</div>
 
-                <form
-                    className="td-filters-grid"
-                    onSubmit={handleCalcular}
-                    style={{ marginTop: "1rem" }}
-                >
-                    <div className="td-field">
-                        <label>Origen</label>
-                        <select
-                            value={origen}
-                            onChange={(e) => setOrigen(e.target.value)}
-                        >
-                            <option value="">Selecciona origen</option>
-                            {nodes.map((n) => (
-                                <option key={n.id} value={n.id}>
-                                    {n.id}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                <div className="floyd-header-title">
+                    <h1>Floyd Warshall Dashboard</h1>
+                    <span>Análisis logístico y financiero</span>
+                </div>
+            </div>
 
-                    <div className="td-field">
-                        <label>Destino</label>
-                        <select
-                            value={destino}
-                            onChange={(e) => setDestino(e.target.value)}
-                        >
-                            <option value="">Selecciona destino</option>
-                            {nodes.map((n) => (
-                                <option key={n.id} value={n.id}>
-                                    {n.id}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+            <div className="floyd-layout">
 
-                    <div className="td-field">
-                        <label>Criterio</label>
-                        <select
-                            value={criterio}
-                            onChange={(e) =>
-                                setCriterio(e.target.value as "rapidez" | "economia")
-                            }
-                        >
-                            <option value="economia">Economía (costo)</option>
-                            <option value="rapidez">Rapidez (tiempo)</option>
-                        </select>
-                    </div>
-
-                    <div className="td-field">
-                        <label>Producto (opcional)</label>
-                        <select
-                            value={productoId}
-                            onChange={(e) => setProductoId(e.target.value)}
-                        >
-                            {PRODUCTOS.map((p) => (
-                                <option key={p.id || "none"} value={p.id}>
-                                    {p.nombre}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div
-                        className="td-field"
-                        style={{ alignSelf: "flex-end", marginTop: "0.3rem" }}
-                    >
-                        <button
-                            type="submit"
-                            className="td-primary-btn"
-                            disabled={loadingRuta || loadingNodes}
-                        >
-                            {loadingRuta ? "Calculando..." : "Calcular ruta"}
-                        </button>
-                    </div>
-                </form>
-
-                {errorRuta && (
-                    <p className="td-msg td-msg-error" style={{ marginTop: 8 }}>
-                        ❌ {errorRuta}
+                {/* PANEL IZQUIERDO */}
+                <div className="floyd-card">
+                    <h2>Ruta Óptima – Floyd-Warshall</h2>
+                    <p className="sub">
+                        Calcula rutas con la matriz de caminos mínimos del grafo.
                     </p>
-                )}
 
-                {ruta && !errorRuta && (
-                    <div
-                        className="td-msg td-msg-ok"
-                        style={{ marginTop: "0.75rem" }}
-                    >
-                        <div>
-                            <strong>Ruta:</strong> {ruta.ruta.join(" → ")}
-                        </div>
-                        <div>
-                            <strong>Tipo de ruta:</strong> {ruta.tipo_ruta}
-                        </div>
-                        <div>
-                            <strong>Distancia total:</strong>{" "}
-                            {formatNumber(ruta.distancia_total)} km
-                        </div>
-                        <div>
-                            <strong>Tiempo total:</strong>{" "}
-                            {formatNumber(ruta.tiempo_total)} h
-                        </div>
-                        <div>
-                            <strong>Costo total:</strong>{" "}
-                            {formatNumber(ruta.costo_total)} USD
-                        </div>
-                    </div>
-                )}
-            </section>
+                    {errorNodes && <div className="floyd-error">{errorNodes}</div>}
 
-            <section className="td-card td-map-card">
-                <MapContainer
-                    className="td-map"
-                    center={[0, 0]}
-                    zoom={2}
-                    minZoom={2}
-                    maxZoom={6}
-                    scrollWheelZoom
-                    worldCopyJump
-                >
-                    <TileLayer
-                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                    />
+                    <form className="floyd-grid" onSubmit={handleCalcular}>
 
-                    {polyline.length >= 2 && (
-                        <>
-                            <Polyline
-                                positions={polyline}
-                                pathOptions={{
-                                    color: "#22c55e",
-                                    weight: 3,
-                                    opacity: 0.9,
-                                }}
-                            />
-                            {polyline.map((p, i) => (
-                                <CircleMarker
-                                    key={i}
-                                    center={p}
-                                    radius={5}
-                                    pathOptions={{ color: "#38bdf8" }}
-                                >
-                                    <Tooltip direction="top" offset={[0, -6]}>
-                                        {ruta?.ruta[i]}
-                                    </Tooltip>
-                                </CircleMarker>
-                            ))}
-                        </>
+                        <div className="floyd-field">
+                            <label>Origen</label>
+                            <select
+                                className="floyd-select"
+                                value={origen}
+                                onChange={(e) => setOrigen(e.target.value)}
+                            >
+                                <option value="">Seleccione</option>
+                                {nodes.map((n) => (
+                                    <option key={n.id} value={n.id}>{n.id}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="floyd-field">
+                            <label>Destino</label>
+                            <select
+                                className="floyd-select"
+                                value={destino}
+                                onChange={(e) => setDestino(e.target.value)}
+                            >
+                                <option value="">Seleccione</option>
+                                {nodes.map((n) => (
+                                    <option key={n.id} value={n.id}>{n.id}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="floyd-field">
+                            <label>Criterio</label>
+                            <select
+                                className="floyd-select"
+                                value={criterio}
+                                onChange={(e) => setCriterio(e.target.value as any)}
+                            >
+                                <option value="economia">Economía</option>
+                                <option value="rapidez">Rapidez</option>
+                            </select>
+                        </div>
+                        <button className="floyd-btn" disabled={loadingRuta}>
+                            {loadingRuta ? "Calculando…" : "Calcular ruta"}
+                        </button>
+
+                    </form>
+
+                    {errorRuta && <div className="floyd-error">{errorRuta}</div>}
+
+                    {ruta && (
+                        <div className="floyd-ok">
+                            <div><strong>Ruta:</strong> {ruta.ruta.join(" → ")}</div>
+                            <div><strong>Tipo:</strong> {ruta.tipo_ruta}</div>
+                            <div><strong>Distancia:</strong> {formatNumber(ruta.distancia_total)} km</div>
+                            <div><strong>Tiempo:</strong> {formatNumber(ruta.tiempo_total)} h</div>
+                            <div><strong>Costo:</strong> {formatNumber(ruta.costo_total)} USD</div>
+                        </div>
                     )}
-                </MapContainer>
-            </section>
+
+                </div>
+
+                {/* MAPA */}
+                <div className="floyd-map">
+                    <MapContainer
+                        className="floyd-map-container"
+                        center={[0, 0]}
+                        zoom={2}
+                        scrollWheelZoom
+                        worldCopyJump
+                    >
+                        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+
+                        {polyline.length >= 2 && (
+                            <>
+                                <Polyline
+                                    positions={polyline}
+                                    pathOptions={{
+                                        color: "#22c55e",
+                                        weight: 4,
+                                        opacity: 0.85,
+                                    }}
+                                />
+                                {polyline.map((p, i) => (
+                                    <CircleMarker
+                                        key={i}
+                                        center={p}
+                                        radius={5}
+                                        pathOptions={{ color: "#3b82f6" }}
+                                    >
+                                        <Tooltip>{ruta?.ruta[i]}</Tooltip>
+                                    </CircleMarker>
+                                ))}
+                            </>
+                        )}
+                    </MapContainer>
+                </div>
+
+            </div>
         </div>
     );
 };
