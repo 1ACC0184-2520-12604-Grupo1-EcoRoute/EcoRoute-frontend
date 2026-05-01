@@ -1,0 +1,241 @@
+/* =========================================================
+   ROOT LAYOUT GENERAL
+========================================================= */
+
+.floyd-root {
+    width: 100%;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    display: flex;
+    flex-direction: column;
+    color: #f8fafc;
+    overflow: hidden;
+}
+
+/* =========================================================
+   HEADER (SI LO AGREGAS LUEGO)
+========================================================= */
+
+.floyd-header {
+    width: 100%;
+    padding: 1.4rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(6px);
+}
+
+.floyd-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #22c55e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.4rem;
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(34,197,94,0.4);
+}
+
+.floyd-header-title h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+.floyd-header-title span {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+/* =========================================================
+   LAYOUT IZQUIERDA / DERECHA
+========================================================= */
+
+.floyd-layout {
+    display: flex;
+    height: calc(90vh - 80px);
+    overflow: hidden;
+}
+
+/* =========================================================
+   CARD IZQUIERDA – SOLO ESTE COLOR SE CAMBIA
+========================================================= */
+
+.floyd-card {
+    width: 40%;
+    min-width: 480px;
+    max-width: 650px;
+
+    /* ESTE ES EL COLOR EXACTO DEL CARD QUE QUIERES */
+    background: rgba(26, 32, 44, 0.60); 
+
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 18px;
+
+    padding: 2rem;
+    margin: 1.5rem;
+
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+
+    overflow-y: auto;
+    transition: all 0.25s ease;
+}
+
+.floyd-card h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    color: #f1f5f9;
+}
+
+.floyd-card p {
+    margin-top: 4px;
+    font-size: .9rem;
+    color: #9ca3af;
+}
+
+/* =========================================================
+   FORMULARIO
+========================================================= */
+
+.floyd-grid {
+    margin-top: 1.6rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.2rem;
+}
+
+.floyd-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.floyd-field label {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+}
+
+.floyd-select {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 0.55rem;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.2s ease;
+}
+
+.floyd-select:focus {
+    border-color: #3b82f6;
+}
+
+/* =========================================================
+   BOTÓN
+========================================================= */
+
+.floyd-btn {
+    grid-column: 1 / 3;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.3rem;
+    transition: all 0.25s ease;
+    font-size: 0.95rem;
+}
+
+.floyd-btn:hover {
+    background: linear-gradient(90deg, #1d4ed8, #2563eb);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(37,99,235,0.3);
+}
+
+.floyd-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* =========================================================
+   MENSAJES
+========================================================= */
+
+.floyd-error {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: rgba(244, 63, 94, 0.15);
+    border-left: 4px solid #f43f5e;
+    color: #fecdd3;
+    font-size: 0.9rem;
+    border-radius: 6px;
+}
+
+.floyd-ok {
+    margin-top: 1.2rem;
+    padding: 1rem;
+    background: rgba(34, 197, 94, 0.12);
+    border-left: 4px solid #22c55e;
+    border-radius: 6px;
+    font-size: 0.92rem;
+    color: #bbf7d0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* =========================================================
+   MAPA
+========================================================= */
+
+.floyd-map {
+    flex: 1;
+    position: relative;
+    background: #0f172a;
+}
+
+.floyd-map-container {
+    height: 100%;
+    width: 100%;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1024px) {
+    .floyd-layout {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .floyd-card {
+        width: calc(100% - 3rem);
+        margin: 1.5rem auto;
+        max-width: 100%;
+        min-width: unset;
+    }
+
+    .floyd-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .floyd-btn {
+        grid-column: 1 / 2;
+    }
+
+    .floyd-map {
+        height: 55vh;
+    }
+}

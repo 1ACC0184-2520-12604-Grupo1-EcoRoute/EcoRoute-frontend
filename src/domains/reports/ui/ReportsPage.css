@@ -1,72 +1,364 @@
-.reports-container {
-  min-height: 100vh;
+/* --- CONTENEDOR PRINCIPAL --- */
+.reports-wrapper {
+  padding: 1.5rem;
+  background-color: transparent; 
+  /* Añadido un sutil resplandor interno para definir mejor el área */
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+  border-radius: 16px; /* Bordes más redondeados */
+}
+
+/* --- BARRA SUPERIOR Y FILTROS --- */
+.reports-top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2.5rem; /* Un poco más de espacio */
+  gap: 1.5rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Línea un poco más visible */
+}
+
+.reports-top-bar h2 {
+  margin: 0;
+  font-size: 2rem; /* Título más grande */
+  font-weight: 800; /* Más peso */
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%); /* Degradado más rico */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Sombra de texto sutil para darle profundidad */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenedor de filtros */
+.filters-container {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Grupo individual Label + Select */
+.filter-group {
   display: flex;
   flex-direction: column;
-  background: #f4f6f9;
-  font-family: Arial, sans-serif;
+  gap: 0.5rem;
 }
 
-.reports-header {
+.filter-group label {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-left: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Iconos para los labels (usando data URI SVGs) */
+.filter-group label::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+}
+
+/* Icono de calendario para fecha */
+.filter-group:first-child label::before {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%2394a3b8" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>');
+}
+/* Icono de filtro para módulo */
+.filter-group:last-child label::before {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%2394a3b8" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>');
+}
+
+/* Wrapper para estilizar el select nativo */
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Flecha personalizada con SVG */
+.select-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%2360a5fa" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  transition: transform 0.2s ease;
+}
+
+.filter-group select {
+  appearance: none;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 253, 0.25);
+  border-radius: 10px; /* Más redondeado */
+  padding: 0.7rem 2.8rem 0.7rem 1.2rem;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 180px;
+  /* Sombra sutil */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.filter-group select:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(96, 165, 250, 0.6);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
+}
+
+.filter-group select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.filter-group select option {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  padding: 12px;
+}
+
+/* --- GRID Y TARJETAS --- */
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.8rem;
+}
+
+.report-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  /* Sombra inicial más suave */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Barra lateral de color según el algoritmo (opcional, pero se ve bien) */
+.report-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.report-card:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(96, 165, 250, 0.4);
+  transform: translateY(-5px);
+  /* Sombra más pronunciada al hover */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+.report-card.expanded {
+  grid-row: span 2;
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #3b82f6;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  z-index: 10; /* Asegura que la tarjeta expandida quede por encima */
+}
+
+/* Header de la tarjeta */
+.report-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background: #34495e;
-  color: white;
-  padding: 1rem 2rem;
+  align-items: flex-start;
+  margin-bottom: 1.2rem;
 }
 
-.reports-header h1 {
-  margin: 0;
+.report-header h3 {
+  margin: 0 0 0.6rem 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f8fafc;
 }
 
-.reports-header button {
-  padding: 0.6rem 1rem;
-  border: none;
+.report-header time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  margin-left: 1rem;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 0.3rem 0.6rem;
   border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  background: #3498db;
-  color: white;
-  transition: background 0.3s;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.reports-header button:hover {
-  background: #2980b9;
+/* Icono de reloj para la hora */
+.report-header time::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%2394a3b8" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
-.reports-main {
-  flex: 1;
-  padding: 2rem;
+/* --- TAGS DE ALGORITMOS --- */
+.algo-tag {
+  display: inline-flex; /* Para alinear el icono */
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.reports-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 10px;
+/* Icono para el tag (usando un círculo simple por ahora) */
+.algo-tag::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.algo-dijkstra { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.algo-dijkstra::before { background-color: #60a5fa; box-shadow: 0 0 8px #60a5fa; }
+
+.algo-floyd-warshall { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+.algo-floyd-warshall::before { background-color: #c084fc; box-shadow: 0 0 8px #c084fc; }
+
+.algo-kruskal { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+.algo-kruskal::before { background-color: #4ade80; box-shadow: 0 0 8px #4ade80; }
+
+.algo-bellman-ford { background: rgba(249, 115, 22, 0.15); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.3); }
+.algo-bellman-ford::before { background-color: #fdba74; box-shadow: 0 0 8px #fdba74; }
+
+.algo- { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
+.algo-::before { background-color: #cbd5e1; }
+
+.report-summary {
+  color: #a1a1aa; /* Color de texto un poco más claro */
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.reports-table th,
-.reports-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #ecf0f1;
+.expanded .report-summary {
+  -webkit-line-clamp: unset;
+  margin-bottom: 1.2rem;
+  color: #e2e8f0;
 }
 
-.reports-table th {
-  background: #ecf0f1;
-  font-weight: bold;
+/* --- DETALLES Y ACCIONES --- */
+.report-details {
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideDown 0.3s ease-out;
 }
 
-.status-done {
-  color: #27ae60;
-  font-weight: bold;
+.report-details p {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  margin-bottom: 1.8rem;
+  line-height: 1.7;
 }
 
-.status-pending {
-  color: #e67e22;
-  font-weight: bold;
+.report-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.td-primary-btn,
+.td-secondary-btn {
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.td-primary-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+.td-primary-btn:hover { 
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.5);
+}
+
+.td-secondary-btn {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 253, 0.25);
+}
+.td-secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Animación de entrada */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ajustes responsive */
+@media (max-width: 768px) {
+  .reports-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .filters-container {
+    width: 100%;
+    gap: 1rem;
+  }
+  
+  .filter-group {
+    flex: 1;
+  }
+  
+  .filter-group select {
+    width: 100%;
+    min-width: unset;
+  }
 }

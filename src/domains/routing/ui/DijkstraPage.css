@@ -1,0 +1,377 @@
+/* =============================
+   BASE GENERAL
+============================= */
+
+.dijkstra-root {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #020617;
+    font-family: "Inter", sans-serif;
+}
+
+
+/* =============================
+   LAYOUT MITAD PANEL - MITAD MAPA
+============================= */
+
+.dijkstra-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+
+/* PANEL IZQUIERDO */
+.dijkstra-panel {
+    width: 40%;
+    min-width: 420px;
+    max-width: 760px;
+    padding: 2.2rem 2.6rem;
+    background: rgba(17, 24, 39, 0.92);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-y: auto;
+}
+
+.dijkstra-panel::-webkit-scrollbar {
+    width: 8px;
+}
+.dijkstra-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+}
+
+
+/* TITULO */
+.dijkstra-title {
+    font-size: 1.45rem;
+    font-weight: 600;
+    margin-bottom: .3rem;
+}
+
+.dijkstra-sub {
+    font-size: 0.9rem;
+    color: #9ca3af;
+    margin-bottom: 1.4rem;
+}
+
+
+/* =============================
+   FORM
+============================= */
+
+.dijkstra-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.dijkstra-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.dijkstra-field label {
+    color: #e5e7eb;
+    font-size: 0.85rem;
+    margin-bottom: .25rem;
+}
+
+
+/* SELECTS */
+.dijkstra-select {
+    background: #1f2937;
+    border: 1px solid #374151;
+    padding: 0.55rem .75rem;
+    border-radius: 8px;
+    color: #e5e7eb;
+    font-size: .9rem;
+    outline: none;
+    transition: 0.2s ease;
+}
+
+.dijkstra-select:hover {
+    border-color: #4b5563;
+}
+
+.dijkstra-select:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 3px #3b82f6;
+}
+
+
+/* BOTÓN */
+.dijkstra-btn {
+    grid-column: 1 / 3;
+    margin-top: .4rem;
+
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    color: white;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    font-size: .95rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.dijkstra-btn:hover {
+    opacity: 0.9;
+}
+
+/* MENSAJES */
+.dijkstra-error {
+    margin-top: .8rem;
+    background: rgba(220, 38, 38, 0.18);
+    padding: .7rem 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #dc2626;
+    color: #fca5a5;
+    font-size: .9rem;
+}
+
+.dijkstra-ok {
+    margin-top: 1rem;
+    background: rgba(34, 197, 94, 0.18);
+    padding: .8rem 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #22c55e;
+    color: #bbf7d0;
+    font-size: .92rem;
+}
+
+
+/* =============================
+   MAPA
+============================= */
+
+.dijkstra-map {
+    flex: 1;
+    position: relative;
+}
+
+.dijkstra-map-container {
+    height: 100%;
+    width: 100%;
+}
+/* =============================
+   CONTENEDOR GENERAL
+============================= */
+
+.dijkstra-root {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #020617;
+    font-family: "Inter", sans-serif;
+    overflow: hidden;
+}
+
+
+/* =============================
+   HEADER SUPERIOR (IGUAL AL DASHBOARD)
+============================= */
+
+.dijkstra-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.1rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(17, 24, 39, 0.65);
+    backdrop-filter: blur(8px);
+}
+
+.dijkstra-header-icon {
+    height: 36px;
+    width: 36px;
+    background: linear-gradient(135deg, #22d3ee, #4ade80);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.dijkstra-header-title {
+    display: flex;
+    flex-direction: column;
+}
+
+.dijkstra-header-title h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+}
+
+.dijkstra-header-title span {
+    font-size: 0.82rem;
+    color: #9ca3af;
+    margin-top: -2px;
+}
+
+
+/* =============================
+   LAYOUT MITAD PANEL - MITAD MAPA
+============================= */
+
+.dijkstra-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+
+/* =============================
+   CARD IZQUIERDO (IGUAL AL TRADE DASHBOARD)
+============================= */
+
+.dijkstra-card {
+    width: 40%;
+    min-width: 450px;
+    max-width: 780px;
+
+    margin: 2rem;
+    padding: 2rem 2.2rem;
+
+    background: rgba(30, 41, 59, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.22);
+
+    overflow-y: auto;
+}
+
+.dijkstra-card::-webkit-scrollbar {
+    width: 8px;
+}
+.dijkstra-card::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+}
+
+
+/* TITULO */
+.dijkstra-card h2 {
+    margin: 0;
+    margin-bottom: 0.45rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: white;
+}
+
+.dijkstra-card p.sub {
+    color: #9ca3af;
+    margin-bottom: 1.4rem;
+    font-size: 0.85rem;
+}
+
+
+/* =============================
+   FORM
+============================= */
+
+.dijkstra-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem;
+}
+
+.dijkstra-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.dijkstra-field label {
+    color: #d1d5db;
+    font-size: 0.82rem;
+    margin-bottom: 0.2rem;
+}
+
+
+/* INPUT / SELECT IGUALES AL DASHBOARD */
+
+.dijkstra-select {
+    background: rgba(17, 24, 39, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e5e7eb;
+    padding: 0.55rem 0.8rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: 0.15s;
+}
+
+.dijkstra-select:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.dijkstra-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1.5px rgba(59, 130, 246, 0.6);
+}
+
+
+/* BOTÓN IGUAL AL DASHBOARD */
+
+.dijkstra-btn {
+    grid-column: 1 / 3;
+    background: linear-gradient(95deg, #2563eb, #3b82f6);
+    padding: 0.7rem;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 0.3rem;
+    font-size: 0.92rem;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35);
+    transition: 0.15s;
+}
+
+.dijkstra-btn:hover {
+    opacity: 0.9;
+}
+
+
+/* =============================
+   MENSAJES
+============================= */
+
+.dijkstra-error {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    border-left: 4px solid #dc2626;
+    background: rgba(220, 38, 38, 0.14);
+    color: #fca5a5;
+    border-radius: 8px;
+}
+
+.dijkstra-ok {
+    margin-top: 1.2rem;
+    padding: 0.8rem;
+    border-left: 4px solid #22c55e;
+    background: rgba(34, 197, 94, 0.14);
+    color: #bbf7d0;
+    border-radius: 8px;
+}
+
+
+/* =============================
+   MAPA A LA DERECHA
+============================= */
+
+.dijkstra-map {
+    flex: 1;
+    position: relative;
+}
+
+.dijkstra-map-container {
+    height: 100%;
+    width: 100%;
+}

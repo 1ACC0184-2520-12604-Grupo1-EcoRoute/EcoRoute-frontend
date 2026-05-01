@@ -7,9 +7,12 @@ type RawResp = {
   details: any[];
 };
 
+const API_BASE =
+    (import.meta as any).env?.VITE_API_BASE || "https://ecoroute-backend-production.up.railway.app";
+
 export class RouteApiRepository implements IRouteRepository {
   async findOptimalRoute(origin: string, destination: string): Promise<Route> {
-    const response = await fetch("http://127.0.0.1:8000/api/compute-route", {
+    const response = await fetch(`${API_BASE}/api/compute-route`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ origin, destination, product: "Paneles solares" }),

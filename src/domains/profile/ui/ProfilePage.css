@@ -1,0 +1,49 @@
+.profile-card {
+    background: rgba(15, 23, 42, 0.96);
+    border-radius: 18px;
+    padding: 1.6rem 1.8rem;
+    border: 1px solid rgba(148, 163, 253, 0.18);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.85);
+    color: #e5e7eb;
+    max-width: 520px;
+    margin: 1.5rem auto;
+}
+
+.profile-card h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #f9fafb;
+}
+
+.profile-sub {
+    margin: 0.25rem 0 1.2rem;
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+}
+
+.profile-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9ca3af;
+}
+
+.profile-value {
+    margin: 0.15rem 0 0;
+    font-size: 0.98rem;
+    color: #e5e7eb;
+    font-weight: 500;
+}
+
+.profile-error {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #fca5a5;
+}
